@@ -7,7 +7,14 @@ documents/literature
 figures
 literature
 notebooks/.ipynb_checkpoints
-notebooks/density_contour.py notebooks/density_contour.pyc
+notebooks/density_contour.*
 data/GUMS
 data/LB07
 data/TDSC
+data/rNLTT/Gould_Chaname.new_parallaxes.dat
+data/rNLTT/machine_readable_catalog.dat
+data/rNLTT/a.out
+data/rNLTT/temp2.dat
+data/rNLTT/catalog.dat
+data/rNLTT/catalog_spaces.dat
+data/tycho-2
