@@ -1,0 +1,151 @@
+\documentclass[12pt, preprint]{aastex}
+\usepackage{bm}
+\usepackage{amsmath}
+
+
+\newcommand{\setof}[1]{\left\{{#1}\right\}}
+\newcommand{\given}{\,|\,}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\catalog}{\bm{Q}}
+\newcommand{\pars}{\bm{\theta}}
+\newcommand{\degree}{\ifmmode {^\circ}\else$^\circ$\ \fi}
+\newcommand{\amin}{\ifmmode {^{\prime}\ }\else$^{\prime}$\fi}
+\newcommand{\asec}{\ifmmode {^{\prime\prime}}\else$^{\prime\prime}$\fi}
+\newcommand{\bs}[1]{\boldsymbol{#1}}
+
+\newcommand{\Msun}{\ifmmode {M_{\odot}}\else${M_{\odot}}$\fi}
+
+\begin{document}
+
+\title{The Gaia Wide Binary Catalog}
+%\author{JJA, MA, JC}
+\date{NOT READY}
+
+\begin{abstract}
+Abstract goes here.
+\end{abstract}
+
+\section{Introduction}
+
+Notes:
+\begin{itemize}
+\item Tycho-2 catalog contains some 2.5 million stars with position, proper motion and $B$ and $V$ magnitudes \citep{hog00b}.
+\item \citet{fabricius02} put together the Tycho Double Star Catalog (TDSC) with 66,219 objects in 32,632 systems.
+\item It takes roughly 10 measurements of a binary to determine if the motion is Keplerian or rectilinear \citep{fabricius02}.\\
+\item TDSC Limiting separation is roughly 0.8\asec. Limiting magnitude is $V_T=11.5$ mag for primary \citep{fabricius02}.
+\item
+\end{itemize}
+
+The TDSC is composed of three different parts \citep{fabricius02}:
+\begin{itemize}
+\item Tycho double star solutions: Only calculated for pairs with separations less than 2.5\asec. Details can be found in \citet{hog00a}.\\
+\item Tycho-2 stars in the Washington Double Star Catalog (WDS). Essentially a cross-correlation between stars in the Tycho-2 catalog and the WDS \citep{mason00}. Because the WDS catalog is so noisy and heterogeneous, lots of problems arose in this cross-correlation. Clearly there are spurious pairs in the WDS. \\
+\item Tycho-2 pairs with separations less than 10\asec. Only 359 of these existed
+\end{itemize}
+
+
+
+\section{Statistical Method}
+
+The Tycho-2 - Gaia combined dataset will contain some 2.5 million stars. The dataset is nearly complete to 11th magnitude, but includes stars out to and exceeding 12th mag. These stars will have a typical astrometric uncertainties of order 300 $\mu$as in position, 700 $\mu$as in parallax, and 1.5 mas yr$^{-1}$ in proper motion. The parallax distances provide an excellent constraint on 
+
+
+
+We consider any particular pair of stars occupying similar positions in five dimensional phase space ($\alpha$, $\delta$, $\mu_{\alpha}$, $\mu_{\delta}$, and $D$) to be formed from one of two classes, either a random alignment ($C_1$) or a genuine binary ($C_2$). This probability will, in general, depend on all five parameters (e.g., random alignments are more likely in dense stellar regions with low proper motions). To account for variations in this probability, we first assume that we are only interested in stellar pairs with close enough positions in phase space such that there is no difference in the average stellar density in the vicinity each star. This allows us to separate the two sets of astrometric parameters (one for each star) into $\vec{x}_j$, the binary's astrometric parameters, and $\vec{x}_i$, the difference in those parameters between the two stars:
+\begin{eqnarray}
+\vec{x}_i &=& \{\theta, \Delta \mu, \Delta D\} \\
+\vec{x}_j &=& \{ \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D \}.
+\end{eqnarray}
+
+Using these sets of parameters and the two classes, we can now construct a Bayesian form for our generalized probability of any pair of stars forming a true binary:
+\begin{equation}
+P({\rm binary}) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j)}{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j) + P(\vec{x}_i \given C_1, \vec{x}_j) P(C_1 \given \vec{x}_j)}. \label{eq:P_binary_1}
+\end{equation}
+
+If we assume the binary fraction ($f_{\rm bin}$) is a constant, we can express the conditional probabilities for $C_1$ and $C_2$ in terms of $n(\vec{x}_j)$, the density of stars as a function of phase space position $\vec{x}_j$:
+\begin{eqnarray}
+P(C_2 \given \vec{x}_j) &=& n(\vec{x}_j) f_{\rm bin} \\
+P(C_1 \given \vec{x}_j) &=& n(\vec{x}_j).
+\end{eqnarray}
+
+We can combine these with Equation \ref{eq:P_binary_1}, to get:
+\begin{equation}
+P({\rm binary}) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin}  + P(\vec{x}_i \given C_1, \vec{x}_j) }. \label{eq:P_binary_2}
+\end{equation}
+
+
+%The density for any particular position in phase space $n(\vec{x}_j)$ can be determined empirically by smoothing the number of star counts observed in the Gaia - TYCHO-2 sample. This function needs to be determined and calibrated using the actual catalog data, but one can in principle train on the simulated data set.
+
+
+The probability that a pair of stars with $\vec{x}_i$ could have been formed due to random alignments is $P(\vec{x}_i \given C_1, \vec{x}_j)$:
+\begin{eqnarray}
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta, \Delta \mu, \Delta D \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
+&=& \int \dd \Delta D' P(\theta, \Delta \mu, \Delta D, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
+&=& \int \dd \Delta D' P(\Delta D \given \Delta D') P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ), \label{eq:P_noise_marginalized}
+\end{eqnarray}
+where we have marginalized over $\Delta D'$, the true difference in distance between the two stars. $P(\Delta D \given \Delta D')$ is a function dependent upon the astrometric uncertainties in the distance measurement.
+
+With a detailed knowledge of the three-dimensional stellar density, proper motion distribution as a function of spatial position, and completeness function of the Gaia-TYCHO-2 sample, one could determine $P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D )$ for any arbitrary pair of stars. However, this is a function with complex dependencies that we are not prepared to address here. Instead, we can empirically approximate this probability for every pair of stars in our data set. First, we express $\mu$ as $V_{\rm pec}$ (to remove the correlation between proper motion and distance), and then separate the terms in the probability:
+\begin{eqnarray}
+P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) &=& P(\theta, \Delta V_{\rm pec}, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right| \label{eq:P_obs_noise} \\
+&=& P(\theta \given \alpha, \delta) 
+  P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha} \mu_{\delta}) \nonumber \\
+  & & \qquad \times  P(\Delta D' \given \alpha, \delta, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|. \label{eq:P_obs_noise_split} 
+\end{eqnarray}
+
+These terms can be separated so long as no correlation exists between them. There is likely to be some dependence between these terms; for instance at larger distances, farther from the Galactic plane, stars are more likely to be halo members with larger peculiar velocities. A more complex model could account for this, however here we consider such variations to have only a minor effect on the probability in Equation \ref{eq:P_obs_noise}. 
+
+We can determine the three probabilities in Equation \ref{eq:P_obs_noise_split} empirically using the following procedure. First, we select an arbitrarily large radius around each star to search for matching pairs. We then numerically generate three normalized histograms, one for each observable: $\theta$, $\Delta V_{\rm pec}$, and $\Delta D'$. Interpolating along the histograms, for each observable, for each pair, provides the three probabilities in Equation \ref{eq:P_obs_noise_split}. What remains is to determine a large enough search radius, such that there are enough that even widely separated, genuine stellar pairs can be resolved and that there are enough stellar pairs such that the three histograms do not suffer from low number statistics. For separations too large, our assumption of independence in observables breaks down, and the split we made in Equation \ref{eq:P_obs_noise} is no longer justified. This search radius needs to be calibrated, but for now, we suggest that 1\degree should be sufficient.
+
+Combining Equation \ref{eq:P_obs_noise_split} and \ref{eq:P_noise_marginalized} gives us the following:
+\begin{eqnarray}
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta \given \alpha, \delta) 
+   P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha} \mu_{\delta}) 
+   \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right| \nonumber \\
+   & & \qquad \times  \int \dd \Delta D' P(\Delta D \given \Delta D') P(\Delta D' \given \alpha, \delta, D),
+\end{eqnarray}
+where we were able to move the conditional probabilities for $\theta$ and $\Delta V_{\rm pec}$ outside the integral over $\Delta D'$ because of their independence on distance.
+
+
+We now determine the probability that a true binary could produce the observations, $P(\vec{x}_i \given C_2, \vec{x}_j)$. We assume that the population of binaries is independent of both position in the Galaxy and its peculiar velocity, which allows us to make the following reduction:
+\begin{eqnarray}
+P(\vec{x}_i \given C_2, \vec{x}_j) &=& P(\theta, \Delta \mu, \Delta D \given C_2, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
+&=& P(\theta, \Delta \mu, \Delta D \given C_2, D).
+\end{eqnarray}
+Next, we again transform the distribution from $\Delta \mu$ to $V_{\rm pec}$:
+\begin{equation}
+P(\theta, \Delta \mu, \Delta D \given C_2, D) = P(\theta, \Delta V_{\rm pec}, \Delta D \given C_2, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|.
+\end{equation}
+
+A genuine binary will have matching distances for each star, so that $\Delta D = 0$. Even the widest binaries have separations $\sim$ 1 pc, less than Gaia's nominal parallax distance uncertainty. The other two observables, $\theta$ and $\Delta \mu$ are covariant and dependent upon the initial binary configuration:
+\begin{equation}
+P(\theta, \Delta \mu, \Delta D \given C_2, D) = P(\Delta D \given \Delta D=0, D) P(\theta, \Delta V_{\rm pec} \given C_2, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|.
+\end{equation}
+
+The final unknown term, $P(\theta, \Delta V_{\rm pec} \given C_2, D)$, expresses the likelihood that a random binary would produce the observed angular separation and velocity difference. In general, this function depends on assumptions made about populations of binary stars; we assume a binary is completely determined by four parameters: the two stellar masses, $M_1$ and $M_2$, the orbital separation, $a$, and the eccentricity, $e$. We further adopt random binary orientation angles to determine the distribution of the projected difference in orbital motions. We adopt prior distributions for these parameters. For a binary at a distance $D$, we can determine the probability, we can therefore determine the probability for any particular observed $\theta$ and $\Delta V_{\rm pec}$.
+
+
+
+%\begin{figure}[h!]
+%\begin{center}
+%\includegraphics[width=0.95\columnwidth]{../figures/}
+%\caption{ }
+%\label{fig:test_corner}
+%\end{center}
+%\end{figure}
+
+\section{Results}
+
+
+\section{Discussion}
+
+
+
+\acknowledgements
+Acknowledgements:
+It is a pleasure to thank...
+Funding...
+Code...
+
+
+\end{document}
