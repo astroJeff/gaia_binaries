@@ -57,9 +57,31 @@ We consider any particular pair of stars occupying similar positions in five dim
 \vec{x}_j &=& \{ \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D \}.
 \end{eqnarray}
 
+For two arbitrary stars, the components of $\vec{x}_j$ are simply the average of the measurements from each binary, weighted by their uncertainties. We assume that Gaia astrometry is precise enough that we can ignore potential problems with this procedure, such as the Lutz-Kelker bias.
+
+
+The components of $\vec{x}_i$ will be determined by the difference between the two measured values; each component will have an uncertainty associated with it. For closely separated stars the angular separation can be determined precisely from the two stellar coordinates:
+\begin{equation}
+\theta \approx \sqrt{(\alpha_A - \alpha_B)^2 \cos \delta_A \cos \delta_B
+			 + (\delta_A - \delta_B)^2)}.
+\end{equation}
+The proper motion difference can be similarly calculated:
+\begin{equation}
+\Delta \mu \approx \sqrt{(\mu_{\alpha, A} - \mu_{\alpha, B})^2 
+			\cos \delta_A \cos \delta_B 
+			+ (\mu_{\delta, A} - \mu_{\delta, B})^2)}.
+\end{equation}
+Finally, the difference in distance should be based on the actual parallax measurements and their errors, but for now we can assume:
+\begin{equation}
+\Delta D = D_A - D_B
+\end{equation}
+
+
+
+
 Using these sets of parameters and the two classes, we can now construct a Bayesian form for our generalized probability of any pair of stars forming a true binary:
 \begin{equation}
-P({\rm binary}) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j)}{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j) + P(\vec{x}_i \given C_1, \vec{x}_j) P(C_1 \given \vec{x}_j)}. \label{eq:P_binary_1}
+P({\rm binary} \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j)}{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j) + P(\vec{x}_i \given C_1, \vec{x}_j) P(C_1 \given \vec{x}_j)}. \label{eq:P_binary_1}
 \end{equation}
 
 If we assume the binary fraction ($f_{\rm bin}$) is a constant, we can express the conditional probabilities for $C_1$ and $C_2$ in terms of $n(\vec{x}_j)$, the density of stars as a function of phase space position $\vec{x}_j$:
@@ -80,8 +102,8 @@ P({\rm binary}) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{
 The probability that a pair of stars with $\vec{x}_i$ could have been formed due to random alignments is $P(\vec{x}_i \given C_1, \vec{x}_j)$:
 \begin{eqnarray}
 P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta, \Delta \mu, \Delta D \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
-&=& \int \dd \Delta D' P(\theta, \Delta \mu, \Delta D, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
-&=& \int \dd \Delta D' P(\Delta D \given \Delta D') P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ), \label{eq:P_noise_marginalized}
+&=& \int \dd \Delta D'\ P(\theta, \Delta \mu, \Delta D, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
+&=& \int \dd \Delta D'\ P(\Delta D \given \Delta D')\ P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ), \label{eq:P_noise_marginalized}
 \end{eqnarray}
 where we have marginalized over $\Delta D'$, the true difference in distance between the two stars. $P(\Delta D \given \Delta D')$ is a function dependent upon the astrometric uncertainties in the distance measurement.
 
@@ -89,7 +111,7 @@ With a detailed knowledge of the three-dimensional stellar density, proper motio
 \begin{eqnarray}
 P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) &=& P(\theta, \Delta V_{\rm pec}, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right| \label{eq:P_obs_noise} \\
 &=& P(\theta \given \alpha, \delta) 
-  P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha} \mu_{\delta}) \nonumber \\
+  P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha}, \mu_{\delta}) \nonumber \\
   & & \qquad \times  P(\Delta D' \given \alpha, \delta, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|. \label{eq:P_obs_noise_split} 
 \end{eqnarray}
 
@@ -99,10 +121,10 @@ We can determine the three probabilities in Equation \ref{eq:P_obs_noise_split} 
 
 Combining Equation \ref{eq:P_obs_noise_split} and \ref{eq:P_noise_marginalized} gives us the following:
 \begin{eqnarray}
-P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta \given \alpha, \delta) 
-   P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha} \mu_{\delta}) 
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta \given \alpha, \delta)\ 
+   P(\Delta V_{\rm pec} \given \alpha, \delta, \mu_{\alpha} \mu_{\delta})\ 
    \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right| \nonumber \\
-   & & \qquad \times  \int \dd \Delta D' P(\Delta D \given \Delta D') P(\Delta D' \given \alpha, \delta, D),
+   & & \qquad \times  \int \dd \Delta D'\ P(\Delta D \given \Delta D')\ P(\Delta D' \given \alpha, \delta, D),
 \end{eqnarray}
 where we were able to move the conditional probabilities for $\theta$ and $\Delta V_{\rm pec}$ outside the integral over $\Delta D'$ because of their independence on distance.
 
