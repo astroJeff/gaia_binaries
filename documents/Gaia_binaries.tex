@@ -214,22 +214,73 @@ where we were able to move the conditional probabilities for $\theta$ and $\Delt
 
 \subsection{Binary probability}
 
-We now determine the probability that a true binary could produce the observations, $P(\vec{x}_i \given C_2, \vec{x}_j)$. We assume that the population of binaries is independent of both position in the Galaxy and its peculiar velocity, which allows us to make the following reduction:
+We now determine the probability that a true binary could produce the observations, $P(\vec{x}_i \given C_2, \vec{x}_j)$. We marginalize over the true parallax, the true proper motion difference, the intrinsic proper motion difference ($\Delta V$), and projected physical separation ($s$). Both components of a true binary will have the same distance (the widest binaries have separations $<$1 pc, less than Gaia's nominal parallax distance uncertainty), so we need only marginalize over one parallax:
 \begin{eqnarray}
-P(\vec{x}_i \given C_2, \vec{x}_j) &=& P(\theta, \Delta \mu, \Delta D \given C_2, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ) \\
-&=& P(\theta, \Delta \mu, \Delta D \given C_2, D).
+P(\vec{x}_i \given C_2, \vec{x}_j) &=& \int \dd \Delta \mu\ \dd \pi\ \dd \Delta V\ \dd s\ \nonumber \\
+& & \qquad \times P( \Delta \mu, \pi, \Delta V, s,\vec{x}_i \given C_2, \vec{x}_j ).
 \end{eqnarray}
-Next, we again transform the distribution from $\Delta \mu$ to $V_{\rm pec}$:
-\begin{equation}
-P(\theta, \Delta \mu, \Delta D \given C_2, D) = P(\theta, \Delta V_{\rm pec}, \Delta D \given C_2, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|.
-\end{equation}
+Observed quantities depend only on the underlying values. We assume that the population of binaries is independent of both position in the Galaxy and its peculiar velocity. 
+\begin{eqnarray}
+P(\vec{x}_i \given C_2, \vec{x}_j) &=& \int \dd \Delta \mu\ \dd \pi\ \dd \Delta V\ \dd s\ P(\Delta \mu' \given \Delta \mu) \nonumber \\
+& & \qquad \times P(\pi'_1 \given \pi)\ P(\pi'_2 \given \pi)\ P(s, \Delta V \given C_2) \nonumber \\
+& & \qquad \times P(\Delta \mu \given \Delta V, \pi)\ P(\theta \given s, \pi)\ P(\pi) \label{eq:P_binary_marginalized_1}
+\end{eqnarray}
 
-A genuine binary will have matching distances for each star, so that $\Delta D = 0$. Even the widest binaries have separations $\sim$ 1 pc, less than Gaia's nominal parallax distance uncertainty. The other two observables, $\theta$ and $\Delta \mu$ are covariant and dependent upon the initial binary configuration:
-\begin{equation}
-P(\theta, \Delta \mu, \Delta D \given C_2, D) = P(\Delta D \given \Delta D=0, D) P(\theta, \Delta V_{\rm pec} \given C_2, D) \left| \frac{\dd \Delta V_{\rm pec}}{\dd \Delta \mu} \right|.
-\end{equation}
+The fifth and sixth terms in the integrand of Equation \ref{eq:P_binary_marginalized_1} are delta functions that account for the proper motion difference and projected separation:
+\begin{eqnarray}
+P(\Delta \mu \given \Delta V, \pi) &=& \delta \left[ F(\Delta V) \right] \\ 
+P(\theta \given s, \pi) &=& \delta \left[ G(s) \right], 
+\end{eqnarray}
+where $F(\Delta V) = (\Delta \mu - \Delta V \pi)$ and $G(s) = (\theta - s \pi)$. 
 
-The final unknown term, $P(\theta, \Delta V_{\rm pec} \given C_2, D)$, expresses the likelihood that a random binary would produce the observed angular separation and velocity difference. In general, this function depends on assumptions made about populations of binary stars; we assume a binary is completely determined by four parameters: the two stellar masses, $M_1$ and $M_2$, the orbital separation, $a$, and the eccentricity, $e$. We further adopt random binary orientation angles to determine the distribution of the projected difference in orbital motions. We adopt prior distributions for these parameters. For a binary at a distance $D$, we can determine the probability, we can therefore determine the probability for any particular observed $\theta$ and $\Delta V_{\rm pec}$.
+These delta functions reduce the integrals over $\Delta V$ and $s$ in Equation \ref{eq:P_binary_marginalized_1}:
+\begin{eqnarray}
+P(\vec{x}_i \given C_2, \vec{x}_j) &=& \int \dd \Delta \mu\ \dd \pi\ P(\Delta \mu' \given \Delta \mu)\ P(\pi'_1 \given \pi) \nonumber \\
+& & \qquad \times P(\pi'_2 \given \pi)\ P(s, \Delta V \given C_2)\ P(\pi) \nonumber \\
+& & \qquad \times  \left[ \frac{\dd F(\Delta V^*)}{\dd \Delta V} \right]^{-1} \left[ \frac{\dd G(s^*)}{\dd s} \right]^{-1}, \label{eq:P_binary_marginalized}
+\end{eqnarray}
+where $\Delta V^*$ and $s^*$ are the roots to $F(\Delta V)$ and $G(s)$, respectively, each of which are equal to $pi$.
+
+
+The first three terms of the integrand are the observed distributions which we assume are Gaussian:
+\begin{eqnarray}
+P(\pi'_1 \given \pi) &=& \mathcal{N}(\pi'_1 \given \pi, \sigma^2_{\pi}) \\
+P(\pi'_2 \given \pi) &=& \mathcal{N}(\pi'_2 \given \pi, \sigma^2_{\pi}) \\
+P(\Delta \mu' \given \Delta \mu) &=& \mathcal{N}( \Delta \mu' \given \Delta \mu, \sigma^2_{\Delta \mu} ).
+\end{eqnarray}
+
+
+
+The fourth term in Equation \ref{eq:P_binary_marginalized}, $P(s, \Delta V_{\rm pec} \given C_2)$, expresses the likelihood that a random binary would produce the observed projected separation and velocity difference. In general, this function depends on assumptions made about populations of binary stars; we assume a binary is completely determined by four parameters: the two stellar masses, $M_1$ and $M_2$, the orbital separation, $a$, and the eccentricity, $e$. We draw random binary separations, $a$, from a distribution flat in log space and eccentricities, $e$, from a thermal distribution:
+\begin{eqnarray}
+P(a) &\propto& a^{-1} \\
+P(e) &\propto& e.
+\end{eqnarray}
+We further adopt random binary orientation angles to determine the distribution of the projected difference in orbital motions. We adopt prior distributions for these parameters. We can therefore determine the probability for any particular observed $s$ and $\Delta V$.
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\columnwidth]{../figures/theta_mu.pdf}
+\caption{ The distribution of 10$^6$ simulated binaries in peculiar velocity vs.\ projected physical separation space. Typical spatial velocities are $\sim$km s$^{-1}$, corresponding to $\sim$mas yr$^{-1}$ at 100 pc. {\it Gaia} has a proper motion precision that can measure the difference between the two stars in a wide binary.  }
+\label{fig:P_binary}
+\end{center}
+\end{figure}
+
+The final term in Equation \ref{eq:P_binary_marginalized} is the Lenz-Kelker bias on the parallax measure. Equation \ref{eq:P_binary_marginalized} can then become:
+\begin{eqnarray}
+P(\vec{x}_i \given C_2, \vec{x}_j) &=& \int \dd \Delta \mu\ \dd \pi\ 
+\mathcal{N}( \Delta \mu' \given \Delta \mu, \sigma^2_{\Delta \mu} )\
+\mathcal{N}(\pi'_1 \given \pi, \sigma^2_{\pi}) \nonumber \\
+& & \qquad \times\ \mathcal{N}(\pi'_2 \given \pi, \sigma^2_{\pi})\
+P(s, \Delta V \given C_2)\
+\pi^2.
+\label{eq:P_binary}
+\end{eqnarray}
+
+
+
+
 
 
 
