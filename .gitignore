@@ -22,3 +22,4 @@ documents/mnras*
 documents/Gaia_binaries.bbl
 documents/Gaia_binaries.blg
 documents/Gaia_binaries.out
+src/*.pyc
