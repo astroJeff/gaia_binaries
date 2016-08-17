@@ -42,7 +42,6 @@ P_binary.generate_binary_set()
 
 # Now, let's calculate the probabilities
 length = len(t)
-length = 2
 print "We are testing", length, "stars..."
 
 dtype = [('i_1','i4'),('i_2','i4'),('ID_1','i4'),('ID_2','i4'),('P_random','f8'),('P_binary','f8'),('P_posterior','f8')]
