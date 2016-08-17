@@ -11,6 +11,7 @@ import const as c
 
 
 binary_set = None
+binary_set_dist = None
 binary_kde = None
 
 # Random binary parameters
@@ -276,7 +277,7 @@ def calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc):
 
 
 
-def get_P_binary(theta, delta_mu, sim_binaries=binary_set, dist=100.0, num_sys=100000, method='kde'):
+def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
     """ This function calculates the probability of a
     random star having the observed proper motion
 
@@ -286,8 +287,6 @@ def get_P_binary(theta, delta_mu, sim_binaries=binary_set, dist=100.0, num_sys=1
         Angular distance between two stars
     delta_mu : float
         Proper Motion difference between two stars
-    sim_binaries : structure
-        Set of simulated binaries search through
     dist : float
         Distance to the stellar population (pc)
     method : string
@@ -302,33 +301,40 @@ def get_P_binary(theta, delta_mu, sim_binaries=binary_set, dist=100.0, num_sys=1
 
     # Catalog check
     global binary_set
-    if sim_binaries is None and binary_set is None:
-        print "No included set of simulated binaries."
-        print "Generating " + str(num_sys) + " binaries now..."
+    global binary_set_dist
 
-        binary_set = np.zeros(num_sys, dtype=[('theta', 'f8'),('delta_mu','f8')])
-        # Helper function
-        def pm_at_dist(pm, dist=100.0):
-            return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
+    if binary_set is None or binary_set_dist != dist:
+        generate_binary_set(num_sys=num_sys, dist=dist)
+    if binary_set is not None and len(binary_set) != num_sys:
+        generate_binary_set(num_sys=num_sys, dist=dist)
 
-        # Create random binaries
-        M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
-        # Get random projected separations, velocities
-        proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
-
-        binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
-        binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
-
-        # Save binaries for later
-        sim_binaries = binary_set
-
-        print "... Finished generating binaries"
+    # if sim_binaries is None and binary_set is None:
+    #     print "No included set of simulated binaries."
+    #     print "Generating " + str(num_sys) + " binaries now..."
+    #
+    #     binary_set = np.zeros(num_sys, dtype=[('theta', 'f8'),('delta_mu','f8')])
+    #     # Helper function
+    #     def pm_at_dist(pm, dist=100.0):
+    #         return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
+    #
+    #     # Create random binaries
+    #     M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
+    #     # Get random projected separations, velocities
+    #     proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
+    #
+    #     binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
+    #     binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
+    #
+    #     # Save binaries for later
+    #     sim_binaries = binary_set
+    #
+    #     print "... Finished generating binaries"
 
 
     if method is 'kde':
         # Use a Gaussian KDE
         global binary_kde
-        if binary_kde is None: binary_kde = gaussian_kde((sim_binaries["theta"], sim_binaries["delta_mu"]))
+        if binary_kde is None: binary_kde = gaussian_kde((binary_set["theta"], binary_set["delta_mu"]))
 
         if isinstance(delta_mu, np.ndarray):
             values = np.vstack([theta*np.ones(len(delta_mu)), delta_mu])
@@ -345,8 +351,45 @@ def get_P_binary(theta, delta_mu, sim_binaries=binary_set, dist=100.0, num_sys=1
 
 
 
+def generate_binary_set(num_sys=100000, dist=100.0):
+    """ Create set of binaries to be saved to P_binary.binary_set
 
-def create_plot_binary(dist=100, num_sys=100, bins=25):
+    Parameters
+    ----------
+    num_sys : int
+        Number of random binaries to generate (default = 1000000)
+    dist : float
+        Distance to binaries (default = 100 pc)
+
+    Returns
+    -------
+    None
+    """
+
+    global binary_set
+    global binary_set_dist
+
+    # Create random binaries
+    M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
+    # Get random projected separations, velocities
+    proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
+
+    binary_set = np.zeros(num_sys, dtype=[('proj_sep','f8'),('pm','f8'),('theta', 'f8'),('delta_mu','f8')])
+    # Helper function
+    def pm_at_dist(pm, dist=100.0):
+        return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
+
+    binary_set['proj_sep'] = proj_sep
+    binary_set['pm'] = pm
+    binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
+    binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
+
+    binary_set_dist = dist
+
+    return
+
+
+def create_plot_binary(dist=100.0, num_sys=100, bins=25):
     """ Create a set of random binaries and plot the distribution
     of resulting theta vs pm
 
@@ -364,10 +407,13 @@ def create_plot_binary(dist=100, num_sys=100, bins=25):
     None
     """
 
-    # Create random binaries
-    M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
-    # Get random projected separations, velocities
-    proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
+    global binary_set
+    global binary_set_dist
+
+    if binary_set is None or binary_set_dist != dist:
+        generate_binary_set(num_sys=num_sys, dist=dist)
+    if binary_set is not None and len(binary_set) != num_sys:
+        generate_binary_set(num_sys=num_sys, dist=dist)
 
 
     fig, ax1 = plt.subplots(1,1, figsize=(6,4))
@@ -384,7 +430,8 @@ def create_plot_binary(dist=100, num_sys=100, bins=25):
 
     # Plot distribution
     contourf_kwargs = {'bins':bins}
-    corner.hist2d(proj_sep*c.Rsun_to_cm/c.AU_to_cm, pm, nbins=bins, range=([xmin,xmax],[ymin,ymax]), **contourf_kwargs)
+    corner.hist2d(binary_set['proj_sep']*c.Rsun_to_cm/c.AU_to_cm, binary_set['pm'], nbins=bins,
+                    range=([xmin,xmax],[ymin,ymax]), **contourf_kwargs)
 
     # Add angular separation at dist axis
     ax2 = ax1.twiny()
@@ -399,7 +446,7 @@ def create_plot_binary(dist=100, num_sys=100, bins=25):
     def pm_at_dist(pm, dist=100.0):
         return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
 
-    ax3.set_ylim(0.0, pm_at_dist(ax1.get_ylim()[1], dist=100.0))
+    ax3.set_ylim(0.0, pm_at_dist(ax1.get_ylim()[1], dist=dist))
     ax3.set_ylabel('Proper motion at distance of ' + str(dist) + ' pc (mas/yr)')
 
     plt.tight_layout()
