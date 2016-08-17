@@ -4,6 +4,7 @@ from numpy.random import normal
 import P_binary
 import P_random
 from astropy.table import Table
+import pickle
 
 
 print "Opening Tycho-2 catalog..."
@@ -106,4 +107,5 @@ for i in np.arange(length):
 print "... finished"
 
 
-print prob_out
+# Save file
+pickle.dump(prob_out, open("../data/tycho-2/tycho-2_prob.data", "wb"))
