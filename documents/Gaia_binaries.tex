@@ -19,9 +19,9 @@
 
 
 
-\title[Gaia wide binaries]{The Gaia-Tycho 2 wide binary catalog}
+\title[Gaia wide binaries]{Wide Binaries in the Gaia-Tycho 2 Catalog}
 \author[J. J. Andrews et al.]{Jeff J. Andrews$^{1}$\thanks{Contact e-mail: \href{mailto:andrews@physics.uoc.gr}{andrews@physics.uoc.gr}}, Marcel Ag\"{u}eros$^2$, Julio Chanam\'{e}$^3$ \\
-$^1$ Foundation for Research and Technology - Hellas \\
+$^1$ IESL/Foundation for Research and Technology - Hellas \\
 $^2$ Columbia University \\
 $^3$ PUC} 
 
@@ -38,13 +38,17 @@ Abstract goes here.
 
 \section{Introduction}
 
+There have been many efforts to search for wide binaries in the past. In the past, these have fallen under two categories depending on whether independent stars are matched using only position \citep{bahcall81, gould95, dhital15} or if proper motion is also included \citep{luyten79, wasserman91, dhital10}. The astrometric precision of Gaia will precisely measure astrometric parallax for some 10$^9$ stars, providing an unprecedented opportunity to identify wide binaries using five dimensions of phase space. Furthermore, by the final Gaia data release, its narrow-band spectrograph will obtain radial velocities for some subset of these stars allowing for a sample to be identified with fully six dimensions of phase space.
+
+
 Notes:
 \begin{itemize}
+\item NLTT catalog originally from \citet{luyten79}. Revised by \citet{gould03} and \citet{salim03}. The rNLTT catalog contains some 36,000 stars. 
+\item \citet{chaname04} identify 999 binaries within the rNLTT catalog, using position, proper motion, and reduced proper motion diagram.
 \item Tycho-2 catalog contains some 2.5 million stars with position, proper motion and $B$ and $V$ magnitudes \citep{hog00b}.
 \item \citet{fabricius02} put together the Tycho Double Star Catalog (TDSC) with 66,219 objects in 32,632 systems.
 \item It takes roughly 10 measurements of a binary to determine if the motion is Keplerian or rectilinear \citep{fabricius02}.\\
 \item TDSC Limiting separation is roughly 0.8\asec. Limiting magnitude is $V_T=11.5$ mag for primary \citep{fabricius02}.
-\item
 \end{itemize}
 
 The TDSC is composed of three different parts \citep{fabricius02}:
@@ -54,13 +58,13 @@ The TDSC is composed of three different parts \citep{fabricius02}:
 \item Tycho-2 pairs with separations less than 10\asec. Only 359 of these existed
 \end{itemize}
 
-Discussion of previous searches through catalogs for common proper motion pairs:
 
+The Gaia-Tycho-2 combined dataset contains some 2.5 million stars. The dataset is nearly complete to $V\approx$11th magnitude, but includes stars out to and exceeding $V\approx$12th mag. These stars have a typical astrometric uncertainties of order 300 $\mu$as in position, 700 $\mu$as in parallax, and 1.5 mas yr$^{-1}$ in proper motion. 
+
+In this work, we describe a statistical method for identifying wide binaries using position, proper motion, and astrometric parallax. Although our discussion is focused on identifying pairs within the joint Gaia-Tycho-2 catalog, our method is derived to be flexibly adapted to future Gaia data releases, as well as future astrometric catalogs.
 
 
 \section{Statistical Method}
-
-The Tycho-2 - Gaia combined dataset will contain some 2.5 million stars. The dataset is nearly complete to 11th magnitude, but includes stars out to and exceeding 12th mag. These stars will have a typical astrometric uncertainties of order 300 $\mu$as in position, 700 $\mu$as in parallax, and 1.5 mas yr$^{-1}$ in proper motion. The parallax distances provide an excellent constraint on 
 
 
 \begin{figure}
@@ -71,20 +75,19 @@ The Tycho-2 - Gaia combined dataset will contain some 2.5 million stars. The dat
 \end{center}
 \end{figure}
 
-The top panel of Figure \ref{fig:rNLTT_pos_mu} shows the distribution of stars in the revised NLTT catalog. Clearly the density of stars varies depending on the position of a particular proposed binary. {\bf More on this figure, and the rNLTT catalog in general.}
+
+Figure \ref{fig:rNLTT_pos_mu} shows the position distribution (top panel) and proper motion distribution (bottom panel) of stars in the revised NLTT catalog. The density of stars clearly varies depending on position and proper motion. It should be therefore be obvious that the probability of any two stars forming by a random alignment of two unassociated stars depends strongly on its position in phase space. At the same time, binary evolution theory provides loose expectations for the distribution of binaries we should expect. The goal in this section is to quantify the probabilities that any particular pair of stars is produced by both a random alignment and a true binary. Combining these probabilities gives us the Bayesian posterior probability that any pair of stars is a true binary. 
 
 
 
-We consider any particular pair of stars occupying similar positions in five dimensional phase space ($\alpha$, $\delta$, $\mu_{\alpha}$, $\mu_{\delta}$, and $\pi$) to be formed from one of two classes, either a random alignment ($C_1$) or a genuine binary ($C_2$). This probability will, in general, depend on all five parameters (e.g., random alignments are more likely in dense stellar regions with low proper motions). To account for variations in this probability, we first assume that we are only interested in stellar pairs with close enough positions in phase space such that there is no difference in the average stellar density in the vicinity each star. This allows us to separate the two sets of astrometric parameters (one for each star) into $\vec{x}_j$, the binary's astrometric parameters, and $\vec{x}_i$, the difference in those parameters between the two stars:
+We consider any particular pair of stars occupying similar positions in five dimensional phase space ($\alpha$, $\delta$, $\mu_{\alpha}$, $\mu_{\delta}$, and $\pi$) to be formed from one of two classes, either a random alignment ($C_1$) or a genuine binary ($C_2$). This probability will, in general, depend on all five parameters (e.g., random alignments are more likely in dense stellar regions with low proper motions). To account for variations in this probability, we first assume that we are only interested in stellar pairs with close enough positions in phase space such that there is no difference in the average stellar density in the vicinity each star. This allows us to separate the two sets of astrometric parameters (one for each star) into $\vec{x}_j$, the pair's position in four-dimensional phase space, and $\vec{x}_i$, the difference in astrometric parameters between the two stars:
 \begin{eqnarray}
 \vec{x}_i &=& \{\theta, \Delta \mu', \pi'_1, \pi'_2 \} \\
-\vec{x}_j &=& \{ \alpha, \delta, \mu_{\alpha}, \mu_{\delta} \}.
+\vec{x}_j &=& \{ \alpha, \delta, \mu_{\alpha}, \mu_{\delta} \},
 \end{eqnarray}
+where we use primes to indicate observed quantities that have some non-negligible uncertainty associated with them; the astrometric parallax is such that angular separation uncertainties can be ignored while proper motion difference and parallax uncertainties cannot. 
 
-For two arbitrary stars, the components of $\vec{x}_j$ are simply the average of the measurements from each binary, weighted by their uncertainties. {\bf Adjust this sentence:} We assume that Gaia astrometry is precise enough that we can ignore potential problems with this procedure, such as the Lutz-Kelker bias. 
-
-
-The components of $\vec{x}_i$ will be determined by the difference between the two measured values; each component will have an uncertainty associated with it. For closely separated stars the angular separation can be determined precisely from the two stellar coordinates:
+For two arbitrary stars, the components of $\vec{x}_j$ are simply the average of the measurements from each binary, weighted by their uncertainties. The components of $\vec{x}_i$ will be determined by the difference between the two measured values; each component will have an uncertainty associated with it. For closely separated stars the angular separation can be determined precisely from the two stellar coordinates:
 \begin{equation}
 \theta \approx \sqrt{(\alpha_A - \alpha_B)^2 \cos \delta_A \cos \delta_B
 			 + (\delta_A - \delta_B)^2}.
@@ -95,16 +98,25 @@ The proper motion difference can be similarly calculated:
 			\cos \delta_A \cos \delta_B 
 			+ (\mu_{\delta, A} - \mu_{\delta, B})^2}.
 \end{equation}
-Uncertainties in this equation need to be separately calculated from standard error analysis.
-
-
-
-Using these sets of parameters and the two classes, we can now use Bayesian theorem to construct our generalized probability of any pair of stars forming a true binary:
+Uncertainties in $\Delta \mu$ are separately calculated from standard error analysis:
 \begin{equation}
-P({\rm binary} \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j)}{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j) + P(\vec{x}_i \given C_1, \vec{x}_j) P(C_1 \given \vec{x}_j)}. \label{eq:P_binary_1}
+\sigma_{\Delta \mu}^2 = \left( \sigma_{\mu_{\alpha, A}}^2 + \sigma_{\mu_{\alpha, B}}^2 \right) \cos \delta_A \cos \delta_B + \sigma_{\mu_{\delta, A}}^2 + \sigma_{\mu_{\delta, B}}^2  
 \end{equation}
 
-If we assume the binary fraction ($f_{\rm bin}$) is a constant, we can express the conditional probabilities for $C_1$ and $C_2$ in terms of $P(\vec{x}_j)$, the density of stars as a function of phase space position $\vec{x}_j$:
+
+
+Using these sets of parameters and the two classes, we can now use Bayes's theorem to construct the generalized probability that any pair of stars forms a true binary (class $C_2$):
+\begin{equation}
+P(C_2 \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) P(C_2 \given \vec{x}_j)}{P(
+\vec{x}_i \given \vec{x}_j)}. \label{eq:P_binary_1}
+\end{equation}
+The first term in the numerator is a likelihood while the second term in the numerator can be considered a prior probability of a binary with $\vec{x}_j$. The denominator in Equation \ref{eq:P_binary_1} is the evidence, which can be determined by summing the probability that the particular pair can be produced by both a binary ($C_2$) and a random alignment ($C_1$):
+\begin{equation}
+P(\vec{x}_i \given \vec{x}_j) = \sum_{k=1,2} P(\vec{x}_i \given C_k, \vec{x}_j) P(C_k \given \vec{x}_j).
+\end{equation}
+
+
+If we assume the binary fraction ($f_{\rm bin}$) is a constant, we can express the conditional prior probabilities for $C_1$ and $C_2$ in terms of $P(\vec{x}_j)$, the density of stars as a function of phase space position $\vec{x}_j$:
 \begin{eqnarray}
 P(C_2 \given \vec{x}_j) &=& P(\vec{x}_j) f_{\rm bin} \\
 P(C_1 \given \vec{x}_j) &=& P(\vec{x}_j).
@@ -112,37 +124,42 @@ P(C_1 \given \vec{x}_j) &=& P(\vec{x}_j).
 
 We can combine these with Equation \ref{eq:P_binary_1}, to get:
 \begin{equation}
-P({\rm binary} \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin}  + P(\vec{x}_i \given C_1, \vec{x}_j) }. \label{eq:P_binary_2}
+P(C_2 \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin}  + P(\vec{x}_i \given C_1, \vec{x}_j) }. \label{eq:P_binary_2}
 \end{equation}
 
 
 %The density for any particular position in phase space $n(\vec{x}_j)$ can be determined empirically by smoothing the number of star counts observed in the Gaia - TYCHO-2 sample. This function needs to be determined and calibrated using the actual catalog data, but one can in principle train on the simulated data set.
 
 
-\subsection{Random Alignment Probability}
+\subsection{Random Alignment Likelihood: $P(\vec{x}_i \given C_1, \vec{x}_j)$}
 
-The probability that a pair of stars with $\vec{x}_i$ and $\vec{x}_j$ could have been formed due to random alignments is $P(\vec{x}_i \given C_1, \vec{x}_j)$. We begin by marginalizing over the true individual parallaxes $\pi_1$ and $\pi_2$ to account for observational uncertainties on these quantities:
+The probability that a pair of stars with $\vec{x}_i$ and $\vec{x}_j$ could have been formed due to random alignments is $P(\vec{x}_i \given C_1, \vec{x}_j)$. We begin by marginalizing over the true individual parallaxes $\pi_1$ and $\pi_2$ and the true proper motion difference $\Delta \mu$ to account for observational uncertainties on these quantities:
 \begin{equation}
-P(\vec{x}_i \given C_1, \vec{x}_j) = %&=& P(\theta, \Delta \mu', \pi'_1, \pi'_2 \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta} ) \\
-%&=&
-\int \dd \pi_1\ \dd \pi_2\ P(\pi_1, \pi_2, \vec{x}_i \given C_1, \vec{x}_j).
-%&=& \int \dd \Delta D'\ P(\Delta D \given \Delta D')\ P(\theta, \Delta \mu, \Delta D' \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}, D ), \label{eq:P_noise_marginalized}
+P(\vec{x}_i \given C_1, \vec{x}_j) = \int \dd \pi_1\ \dd \pi_2\ \dd \Delta \mu\ P(\pi_1, \pi_2, \Delta \mu, \vec{x}_i \given C_1, \vec{x}_j). \label{eq:P_noise_marginalized}
 \end{equation}
-In principle, we should further marginalize over the true underlying proper motion difference, $\Delta \mu$, however, as we show below uncertainties in this difference are much smaller than differences in the empirical distribution of proper motions. We therefore make the approximation that $\Delta \mu' = \Delta \mu$. Since the observational parallaxes are dependent only on the underlying values, we can factor these out, substituting for $\vec{x}_i$ and $\vec{x}_j$:
+Now we can substitute for $\vec{x}_i$ and $\vec{x}_j$ and factor out $\pi'_1$, $\pi'_2$, and $\Delta \mu'$ since observed quantities are dependent only on their underlying values (and their associated uncertainties):
 \begin{eqnarray}
-P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int  \dd \pi_1\ \dd \pi_2\ P(\pi'_1 \given C_1, \pi_1) P(\pi_1) \nonumber \\
-	& &  \times P(\pi'_2 \given, C_1 \pi_2) P(\pi_2) P(\theta \given C_1, \alpha, \delta) \nonumber \\
-	& &  \times  P(\Delta \mu \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}). \label{eq:RA_substituted}
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int  \dd \pi_1\ \dd \pi_2\ \dd \Delta \mu\ P(\pi'_1 \given \pi_1) P(\pi_1) \nonumber \\
+	& &  \times P(\pi'_2 \given \pi_2) P(\pi_2) P(\Delta \mu' \given \Delta \mu) \nonumber \\
+	& &  \times  P(\theta, \Delta \mu \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}). \label{eq:RA_substituted}
+\end{eqnarray}
+Our assumption that $\theta$ and $\Delta \mu$ are independent allow us to split the last term in the integrand. 
+%\begin{eqnarray}
+%P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int  \dd \pi_1\ \dd \pi_2\ \dd \Delta \mu\ P(\pi'_1 \given \pi_1) P(\pi_1) \nonumber \\
+%	& &  \times P(\pi'_2 \given \pi_2) P(\pi_2) P(\theta \given C_1, \alpha, \delta) \nonumber \\
+%	& &  \times  P(\Delta \mu' \given \Delta \mu) P(\Delta \mu \given C_1, \mu_{\alpha}, \mu_{\delta}). \label{eq:RA_substituted}
+%\end{eqnarray}
+Furthermore, the integrals over $\pi_1$ and $\pi_2$ are independent and can be factored out. Equation \ref{eq:RA_substituted} therefore becomes:
+\begin{eqnarray}
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int P(\theta \given C_1, \alpha, \delta) P(\Delta \mu' \given \Delta \mu) \nonumber \\
+	& & \times\ P(\Delta \mu \given C_1, \mu_{\alpha}, \mu_{\delta})\ \dd \Delta \mu \nonumber \\
+	& &  \times \int  P(\pi'_1 \given \pi_1) P(\pi_1)\ \dd \pi_1 \nonumber \\
+	& &  \times \int  P(\pi'_2 \given \pi_2) P(\pi_2)\ \dd \pi_2. \label{eq:RA_factored}
 \end{eqnarray}
 
-Since the last two terms in the integrand have no dependence on either parallax, they can be factored out of the integrals. Furthermore, the integrals themselves are independent of each other, therefore Equation \ref{eq:RA_substituted} becomes:
-\begin{eqnarray}
-P(\vec{x}_i \given C_1, \vec{x}_j) &=& P(\theta \given C_1, \alpha, \delta) P(\Delta \mu \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}) \nonumber \\
-	& &  \times \int  P(\pi'_1 \given C_1, \pi_1) P(\pi_1)\ \dd \pi_1 \nonumber \\
-	& &  \times \int  P(\pi'_2 \given C_1, \pi_2) P(\pi_2)\ \dd \pi_2. \label{eq:RA_factored}
-\end{eqnarray}
+To determine the $\theta$ term in Equation \ref{eq:RA_factored}, we recognize that as $\theta$ increases, the probability of random alignments increases linearly. This scaling is because, for a uniformly dense population on the sky, consecutively larger annuli surrounding a star have areas that increase linearly, and the probability of random alignments should scale with the area (at least locally, so the density of stars per phase space is constant). The scaling coefficient depends on the local stellar density surrounding a point. We therefore determine this scaling empirically. 
 
-The first term in Equation \ref{eq:RA_factored}, $P(\theta \given C_1, \alpha, \delta)$, demonstrates that as $\theta$ increases, the probability of random alignments increases linearly. This scaling is because, for a uniformly dense population on the sky, consecutively larger annuli surrounding a star have areas that increase linearly, and the probability of random alignments should scale with the area. Unfortunately, the scaling coefficient depends on the local stellar density surrounding a point. We therefore determine this scaling empirically for each point. 
+To do this, we calculate the kernel density estimate (KDE), using a Gaussian kernel, for the distribution of stars in the Gaia-Tycho-2 catalog. The KDE acts as a smoothing function over the distribution in Figure \ref{fig:rNLTT_pos_mu} and produces a normalized probability density function over position space. {\bf Does this need to be calculated on $\alpha \cos \delta$ and $\delta$, instead of $\alpha$ and $\delta$?}
 
 \begin{figure}
 \begin{center}
@@ -152,24 +169,45 @@ The first term in Equation \ref{eq:RA_factored}, $P(\theta \given C_1, \alpha, \
 \end{center}
 \end{figure}
 
-The top panel of Figure \ref{fig:rNLTT_density} demonstrates the typical accuracy of our emperically-derived estimate for the local space density. This figure shows the distribution for one particular star representative of typical accuracies for our estimation methods. The solid line shows the actual number of stars within some radius $\theta$, while the dashed line approximates this distribution by assuming a smooth density of nearby stars. The dashed line is determined independently for each primary object by counting all the stars within 5\degree:
-\begin{eqnarray}
-N_{\rm stars}(\theta) &=& 4 \pi \rho\ \theta^2 \nonumber \\
-\rho &=& \frac{N_{\rm stars}(5\degree) }{4 \pi \left(5\degree\right)^2}.
-\end{eqnarray}
-We find that a radius of 5\degree for the normalization is large enough to smooth out local density variations, while small enough to avoid large scale variations in the stellar density due to structure in the Galaxy.
-
-
-The second term in Equation \ref{eq:RA_factored} demonstrates the corresponding effect for proper motion. Unfortunately, this scaling is no longer linear, since stars will not uniformly populate in proper motion space (for instance, nearby stars tend to have larger proper motions, while more distant stars tend to have proper motions closer to zero). This term can also be calculated empirically. 
-
-The bottom panel of Figure \ref{fig:rNLTT_density} demonstrates the accuracy of our estimation method for the number of stars with similar proper motions to the primary. The solid line shows the actual number of stars within some nearby radius $\Delta \mu$. Since stars do not have a smooth density in proper motion space, we cannot assume the quadratic model as we did for the position density. Instead we use a kernel density estimator (KDE) with a Gaussian kernel to derive local density of stars in proper motion space, $\rho_{\mu}$. Our equation is then:
+The top panel of Figure \ref{fig:rNLTT_density} demonstrates the typical accuracy of our empirically-derived estimate for the local space density. This figure shows the distribution for one particular star representative of typical accuracies for our estimation methods. The solid line indicates the number of stars within some radius $\theta$, while the dashed line approximates this distribution using our KDE estimate. The dashed line is determined independently for each primary object by calling the KDE function to determine the local stellar density:
 \begin{equation}
-N_{\rm stars}(\Delta \mu) = 4 \pi \rho_{\mu} \left(\Delta \mu\right)^2.
+N_{\rm stars}(\theta) = 4 \pi \rho(\alpha, \delta)\ \theta^2.
 \end{equation}
-Due to smaller scale variations in the proper motion, it is evident from Figure \ref{fig:rNLTT_density} that this estimation method is only valid for proper motion differences of order dozens of mas yr$^{-1}$. Since typical binaries have $\Delta \mu\ \sim$ mas yr$^{-1}$, this is accurate enough for our purposes here.
+The $\theta$ term in Equation \ref{eq:RA_factored} can now be determined:
+\begin{equation}
+P(\theta \given C_1, \alpha, \delta) = 2 \pi \rho(\alpha, \delta)\ \theta. \label{eq:P_theta}
+\end{equation}
 
 
-{\bf Paragraph and plot on parallaxes}
+The $\Delta \mu$ term in Equation \ref{eq:RA_factored} provides the corresponding effect for proper motion. This term can also be calculated empirically using a KDE, again with a Gaussian kernel. The bottom panel of Figure \ref{fig:rNLTT_density} demonstrates the accuracy of our estimation method for the number of stars with similar proper motions to the primary. The solid line shows the actual number of stars within some nearby radius $\Delta \mu$. The number of stars with similar proper motions is similarly:
+\begin{equation}
+N_{\rm stars}(\Delta \mu) = 4 \pi \rho_{\mu}(\alpha, \delta) \left(\Delta \mu\right)^2.
+\end{equation}
+Due to smaller scale variations in the proper motion, it is evident from Figure \ref{fig:rNLTT_density} that this estimation method is only valid for proper motion differences of order dozens of mas yr$^{-1}$. Since typical binaries have $\Delta \mu\ \sim$ mas yr$^{-1}$, this is accurate enough for our purposes here. 
+
+The $\Delta \mu$ term in the equation above is therefore:
+\begin{equation}
+P(\Delta \mu \given C_1, \alpha, \delta) = 2 \pi \rho_{\mu}(\alpha, \delta)\ \Delta \mu, \label{eq:P_mu}
+\end{equation}
+where $\rho_{\mu}(\alpha, \delta)$ is the proper motion-dependent density determined by the KDE.
+
+
+Probability terms involving the observed quantities in Equation \ref{eq:RA_factored} can be substituted as normal distributions, based on the Gaussian uncertainties in these terms. Non-Gaussian uncertainties can be taken into account here as well:
+\begin{eqnarray}
+P(\Delta \mu' \given \Delta \mu) &=& \mathcal{N}(\Delta \mu \given \Delta \mu', \sigma_{\Delta \mu}) \label{eq:delta_mu_uncertainty} \\
+P(\pi'_1 \given \pi_1) &=& \mathcal{N}(\pi_1 \given \pi'_1, \sigma_{\pi_1}) \label{eq:pi_1_uncertainty} \\
+P(\pi'_2 \given \pi_2) &=& \mathcal{N}(\pi_2 \given \pi'_2, \sigma_{\pi_2}). \label{eq:pi_2_uncertainty} \\
+\end{eqnarray}
+
+
+{\bf Paragraph and plot on parallaxes. Do we need to consider the Lutz-Kelker bias in $P(\pi)$ here?}
+
+
+The random alignment likelihood, $P(\vec{x}_i \given C_1, \vec{x}_j)$ can now be determined by substituting  Equations \ref{eq:P_theta}, \ref{eq:P_mu}, \ref{eq:delta_mu_uncertainty}, \ref{eq:pi_1_uncertainty}, and \ref{eq:pi_2_uncertainty} into the marginalized and factored Equation \ref{eq:RA_factored}. We calculate these integrals using Monte Carlo sampling; our convergence tests indicate that 10$^3$ samples provide a sufficient accuracy for our purposes here.
+
+
+
+
 \begin{comment}
 The last two integrals in Equation \ref{eq:RA_factored} account for uncertainties in each of the astrometric parallax measurements. We assume that Lutz-Kelker bias \citep{lutz73} needs to be taken into account, therefore:
 \begin{equation}
@@ -279,6 +317,68 @@ P(s, \Delta V \given C_2)\
 \end{eqnarray}
 
 
+
+
+
+
+
+\section{Application to the Revised NLTT Catalog} \label{sec:rNLTT}
+
+
+To test our method, we apply this method to the revised NLTT (rNLTT) catalog \citep{gould03, salim03}, containing 36,085 entries with a typical proper motion uncertainty of several mas yr$^{-1}$. A comparison of the pairs we identify to the 999 wide binaries previously identified by \citet[][hereafter CG04]{chaname04} in the rNLTT catalog provides a test of our method. The comparison is imperfect, since the rNLTT sample lacks the parallax measurements within the Gaia-Tycho-2 catalog. To apply our method to this sample, we assume all stars in the sample are at a distance of 100 pc, yet as we will see below, despite such a clearly incorrect assumption, our method remains effective.
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\columnwidth]{../figures/rNLTT_pos_mu.pdf}
+\caption{The top panel shows the distribution of rNLTT stars in right ascension and declination, while the bottom panel shows the distribution in proper motion. The donut shape in the proper motion distribution is due to the proper motion selection criteria for the NLTT catalog: included stars have a nominal proper motion of at least 200 mas yr$^{-1}$. }
+\label{fig:rNLTT_pos_mu}
+\end{center}
+\end{figure}
+
+
+
+There are some important differences between the two search methods that deserve mention. First, CG04 identified binaries by first making simple proper motion cuts, using two separate $\Delta \mu$ limits for disk and halo binaries. Proper motion uncertainties are ignored, whereas the method defined here both includes uncertainties in proper motion as well as a quantification of binary probability as a function of $\theta$, $\Delta \mu$, and position in stellar position$-$proper motion phase space. However, to remove potential contaminants, CG04 include a constraint using an adapted version of the reduced proper motion to discern between stellar disk and halo populations. 
+%\begin{equation}
+%\eta = V + 5 \log \mu - 3.1(V-J) - 1.47 | \sin b | - 2.73. \label{eq:eta_rpm}
+%\end{equation}
+Clearly, true pairs cannot contain stars from different populations, a powerful constraint that our method ignores (Gaia-Tycho-2 parallaxes will make this constraint obsolete). Given the differences in these two methods, pairs disjoint between the two samples are to be expected.
+
+
+
+Since we set the distance to every star in the catalog to 100 pc, our method greatly simplifies. $\vec{x}_i$ is redefined as $\vec{x}_i = \{ \theta, \Delta \mu' \}$. Equation \ref{eq:RA_substituted} for $P(\vec{x}_i \given C_1, \vec{x}_j)$ becomes:
+\begin{eqnarray}
+P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int \dd \Delta \mu\ P(\Delta \mu' \given \Delta \mu)\nonumber \\
+& & \qquad \times P(\theta \given C_1, \alpha, \delta) P(\Delta \mu \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta}) \nonumber \\
+\label{eq:P_random_NLTT}
+\end{eqnarray}
+
+
+Equation \ref{eq:P_binary} for $P(\vec{x}_i \given C_2, \vec{x}_j)$ becomes:
+\begin{equation}
+P(\vec{x}_i \given C_2, \vec{x}_j) = \int \dd \Delta \mu\ 
+\mathcal{N}( \Delta \mu' \given \Delta \mu, \sigma^2_{\Delta \mu} )\
+P(s, \Delta V \given C_2),
+\label{eq:P_binary_rNLTT}
+\end{equation}
+where $s = \theta D$ and $V = \Delta \mu D$. 
+
+
+
+After applying our method to the rNLTT catalog, we find similar results to CG04. Of their 999 identified pairs, we find 934 counterparts in the rNLTT catalog. Our method redetects 713 of this with a posterior probability greater than 50\%. 84 of the CG04 binaries were not detected because they have a $P(\vec{x}_i \given C_2, \vec{x}_j)$ value of zero. The other 137 non-detected CG04 pairs had nonzero binary probabilities, but had posterior proabilities less than 50\%. 
+
+
+Gray points in each panel of Figure \ref{fig:NLTT_probabilities} show the distribution of $P(\vec{x}_i \given C_1, \vec{x}_j)$ and $P(\vec{x}_i \given C_2, \vec{x}_j)$ for the pairs we identify. Comparison with the dashed lines corresponding to posterior probabilities of 50\% and 90\% indicate that the majority of these binaries are detected with very high significance. 
+
+Of the sample identified by CG04, we redetect 707 pairs ($\approx 70$\%) with a posterior probability greater than 50\%. Colored points in the four panels of Figure \ref{fig:NLTT_probabilities} compare the pairs in CG04 with all 946 pairs that we identify, indicated as gray points. The top left panel shows the disk binaries, the top right panel shows the binaries containing a WD, the bottom left panel shows the halo binaries, and the bottom right binary shows those binaries detected but ultimately rejected by CG04 for reasons provided in the legend. Differences between the two samples are substantial.  
+
+\begin{figure*}
+\begin{center}
+\includegraphics[width=0.95\textwidth]{../figures/rNLTT_P_binary_P_random.pdf}
+\caption{ Likelihoods of stellar pairs being produced by a true binary and a random alignment. Gray points indicate the 949 pairs with posterior probabilities of being a true binary greater than 50\%. Colored points in the four panels indicate disk binaries (top left), WD binaries (top right), halo binaries (bottom left), and binaries identified but rejected by CG04 (bottom right). }
+\label{fig:NLTT_probabilities}
+\end{center}
+\end{figure*}
 
 
 
