@@ -173,7 +173,7 @@ def get_random_alignment_P_pos(ra1, dec1, ra2, dec2, density=None, catalog=None)
         return
 
     # Projected distance
-    theta = rad_to_deg(get_theta_proj_degree(ra1, dec1, ra2, dec2))
+    theta = get_theta_proj_degree(ra1, dec1, ra2, dec2)
 
     # Local stellar density, if not provided
     if density is None:

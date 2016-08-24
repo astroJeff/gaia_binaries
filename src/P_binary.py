@@ -305,8 +305,6 @@ def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
 
     if binary_set is None or binary_set_dist != dist:
         generate_binary_set(num_sys=num_sys, dist=dist)
-    if binary_set is not None and len(binary_set) != num_sys:
-        generate_binary_set(num_sys=num_sys, dist=dist)
 
     # if sim_binaries is None and binary_set is None:
     #     print "No included set of simulated binaries."
@@ -336,18 +334,22 @@ def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
         global binary_kde
         if binary_kde is None: binary_kde = gaussian_kde((binary_set["theta"], binary_set["delta_mu"]))
 
-        if isinstance(delta_mu, np.ndarray):
+
+        if isinstance(delta_mu, np.ndarray) and isinstance(theta, np.ndarray):
+            values = np.vstack([theta, delta_mu])
+            prob_binary = binary_kde.evaluate(values)
+        elif isinstance(delta_mu, np.ndarray):
             values = np.vstack([theta*np.ones(len(delta_mu)), delta_mu])
-            P_binary = binary_kde.evaluate(values)
+            prob_binary = binary_kde.evaluate(values)
         else:
-            P_binary = binary_kde.evaluate([theta, delta_mu])
+            prob_binary = binary_kde.evaluate([theta, delta_mu])
 
     else:
         print "You must input an appropriate method."
         print "Options: 'kde' only"
         return
 
-    return P_binary
+    return prob_binary
 
 
 
