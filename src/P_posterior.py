@@ -54,7 +54,7 @@ def match_binaries(t):
 
     for i in np.arange(length):
 
-        if i%10 == 0: print i, time.time()-start
+        if i%1000 == 0: print i, time.time()-start
 
 
         # Get ids of all stars within 1 degree
