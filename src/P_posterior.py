@@ -9,7 +9,7 @@ import time
 
 
 size_integrate = 10          # Number of samples for delta mu integration for initial search
-size_integrate_full = 10000  # Number of samples for delta mu integration for possible matches
+size_integrate_full = 1000  # Number of samples for delta mu integration for possible matches
 f_bin = 0.5                  # binary fraction
 
 
@@ -67,28 +67,25 @@ def match_binaries(t):
         if len(ids_good) == 0: continue
 
 
+
         # Select random delta mu's for Monte Carlo integration over observational uncertainties
+        theta_good = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][ids_good], t['dec'][ids_good])
         delta_mu_ra_err = np.sqrt(t['mu_ra_err'][i]**2 + t['mu_ra_err'][ids_good]**2)
         delta_mu_dec_err = np.sqrt(t['mu_dec_err'][i]**2 + t['mu_dec_err'][ids_good]**2)
+        delta_mu_err = np.sqrt(delta_mu_ra_err**2 + delta_mu_dec_err**2)
+        delta_mu_ra = t['mu_ra'][i] - t['mu_ra'][ids_good]
+        delta_mu_dec = t['mu_dec'][i] - t['mu_dec'][ids_good]
+        delta_mu = np.sqrt(delta_mu_ra**2 + delta_mu_dec**2)
+        mu_diff_3sigma = delta_mu - 3.0*delta_mu_err
 
-
-        delta_mu_ra_sample = multivariate_normal(mean=(t['mu_ra'][i] - t['mu_ra'][ids_good]), \
-                                                 cov=np.diag(delta_mu_ra_err), \
-                                                 size=size_integrate)
-        delta_mu_dec_sample = multivariate_normal(mean=(t['mu_dec'][i] - t['mu_dec'][ids_good]), \
-                                                  cov=np.diag(delta_mu_dec_err), \
-                                                  size=size_integrate)
-        delta_mu_sample = np.sqrt(delta_mu_ra_sample**2 + delta_mu_dec_sample**2)
-
-        # Monte Carlo integrate observational uncertainties on delta mu
-        prob_tmp = P_binary.get_P_binary(np.repeat(theta[ids_good-i-1], size_integrate) * 3600.0, np.ravel(delta_mu_sample.T))
-        prob_binary = 1.0/size_integrate * np.sum(prob_tmp.reshape((len(ids_good), size_integrate)), axis=1)
 
 
         # Identify potential matches as ones with non-zero P(binary)
-        ids_good_binary = np.where(prob_binary > 0.0)[0]
+        mu_diff_vector = np.amax(np.vstack([mu_diff_3sigma, 0.1*np.ones(len(ids_good))]), axis=0)
+        ids_good_binary = np.where(P_binary.get_P_binary(theta_good * 3600.0, mu_diff_vector))[0]
         if len(ids_good_binary) == 0: continue
         ids_good_binary_all = ids_good[ids_good_binary]
+
 
 
         # More precise integration for potential matches

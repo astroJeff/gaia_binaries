@@ -316,6 +316,7 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
 
 def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec2,
                            delta_mu_ra_err=0.0, delta_mu_dec_err=0.0,
+                           nsamples=100,
                            pos_density=None, pm_density=None, catalog=None):
     """ This function calculates the probability of a
     pair of stars being formed due to random alignments.
@@ -332,6 +333,8 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
         Proper motion of the second star (mas/yr)
     delta_mu_ra_err, delta_mu_dec_err : float
         Proper motion difference uncertainties (mas/yr)
+    nsamples : int
+        Number of samples for Delta mu Monte Carlo integral
     catalog : structure
         Catalog to search through
 
@@ -357,11 +360,11 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
     if pm_density is None:
         P_mu = get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2,
                                          delta_mu_ra_err=delta_mu_ra_err, delta_mu_dec_err=delta_mu_dec_err,
-                                         catalog=catalog)
+                                         nsamples=nsamples, catalog=catalog)
     else:
         P_mu = get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2,
                                          delta_mu_ra_err=delta_mu_ra_err, delta_mu_dec_err=delta_mu_dec_err,
-                                         density=pm_density, catalog=catalog)
+                                         nsamples=nsamples, density=pm_density, catalog=catalog)
 
     # So long as probabilities are independent:
     # P(pos,mu) = P(pos) * P(mu)
