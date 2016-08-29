@@ -373,15 +373,38 @@ P(s, \Delta V \given C_2),
 where $s = \theta D$ and $V = \Delta \mu D$. 
 
 
-{\bf Following paragraphs summarize different results between our method and Chaname \& Gould (2004). THESE PARAGRAPHS NEED TO BE UPDATED.}
+Through their search algorithm, they find 1147 candidate pairs in the rNLTT catalog. In our search through the rNLTT catalog using our algorithm here, we identify 1189 pairs in the rNLTT catalog with a posterior probability $>50$\%. Although the yield of wide binaries is remarkably similar despite very different search algorithms, the overlap in the two samples (number of redetections) is only 620 pairs. 
 
-After applying our method to the rNLTT catalog, we find similar results to CG04. Of their 999 identified pairs, we find 934 counterparts in the rNLTT catalog. Our method redetects 744 of this with a posterior probability greater than 50\%. 75 of the CG04 binaries were not detected because they have a $P(\vec{x}_i \given C_2, \vec{x}_j)$ value of zero. The other 115 non-detected CG04 pairs had nonzero binary probabilities, but had posterior probabilities less than 50\%. 
-
-
-
-In addition to the 746 redetections, our method identifies an additional 242 pairs of stars with probabilities above 50\%. 44 of these are in the CG04 catalog, but ultimately ruled out as false positives for various reasons (22 because of ``uncertain classification", 15 because of ``inconsistent RPM positions", and seven because of ``large proper motion differences"). Four detected pairs were components of pairs in the CG04 catalog, but identified with different companions by our method; each of these four were found to be part of a triple system, in which our method matched a different pair of stars within the triple. The remaining 194 pairs seem to be true binaries not detected by CG04. 
+The differences in the two samples are illustrative. Of the 1147 CG04 pairs, 80 pairs have one or both stars missing from the rNLTT catalog. A further 184 pairs have one or both stars without proper motion uncertainties for one of the components. This typically occurs because Luyten identified the pair as a true binary and only listed the joint proper motion \citep{chaname04}. By removing these stars when selecting a clean catalog to search through, we are insensitive to these binaries, which are likely true pairs. We are left with 883 pairs of stars in the CG04 catalog which our algorithm should detect. Of these, 263 have posterior probabilities less than 50\%, leaving us with 620 redirected pairs. These 263 pairs have either separations or proper motions too large for our algorithm to identify with confidence that these are true binaries. In some cases, the posterior probability is just below 50\%, in which case our assumed distance of 100 pc could responsible for our non-detection. Astrometric parallax would be helpful for identifying these marginal cases in the future.
 
 
+
+In addition to the 620 redetections, our method identifies five detected pairs were components of pairs in the CG04 catalog, but identified with different companions by our method; each of these five were found to be part of a triple system, in which our method matched a different pair of stars within the triple. Actually there were four triples, but one was matched twice producing five pairs. {\bf There are undoubtedly other triples in this sample. Write a code block to search specifically for higher order systems.}
+
+
+Finally, we identify an additional 564 stellar pairs with posterior probabilities above 50\% that were not identified by CG04. These binaries are all detected with high significance, and we therefore suspect they are genuine pairs. It is worth exploring why \citet{chaname04} did not detect these pairs.
+%44 of these are in the CG04 catalog, but ultimately ruled out as false positives for various reasons (22 because of ``uncertain classification", 15 because of ``inconsistent RPM positions", and seven because of ``large proper motion differences"). 
+
+
+\begin{figure*}
+\begin{center}
+\includegraphics[width=0.95\textwidth]{../figures/rNLTT_probs.pdf}
+\caption{ The left-most panel shows the distribution of posterior probabilities for the pairs we detect (solid line) as well as the pairs in the CG04 catalog that are identified and accepted (dotted line) and identified and rejected (dashed line). Our method typically accepts or rejects pairs of stars with very high likelihood; there are relatively few pairs with posterior probabilities not close to either zero or unity. The middle and right panels show distributions for the same samples of binary likelihoods and random alignment likelihoods, respectively. Although there is a substantial overlap of 620 re-detected pairs, our model identifies an additional sample of 564 binaries missed by CG04 with lower random alignment likelihoods and higher binary likelihoods on average. }
+\label{fig:NLTT_probs}
+\end{center}
+\end{figure*}
+
+
+Separately, we run our detection algorithm on the sample by CG04 and compare these probabilities to the pairs we identify in the rNLTT catalog. The first panel of Figure \ref{fig:NLTT_probs} shows the posterior probabilities for the set of binaries we detect (solid lines), detected and accepted by CG04 (dotted lines), and detected but ultimately rejected by CG04 (dashed lines). The distribution of posterior probabilities for the CG04 pairs indicates that binaries are typically either detected or rejected with a high likelihood by our method; there are relatively few marginal cases with posterior probabilities near 50\%.
+
+
+The middle and right panels of Figure \ref{fig:NLTT_probs} show distributions for the same samples of binary likelihoods and random alignment likelihoods, respectively. Although there is a substantial overlap of 620 re-detected pairs, our model identifies an additional sample of 564 binaries missed by CG04 with lower random alignment likelihoods and higher binary likelihoods on average. 
+
+
+
+
+
+\begin{comment}
 
 Gray points in each panel of Figure \ref{fig:NLTT_probabilities} show the distribution of $P(\vec{x}_i \given C_1, \vec{x}_j)$ and $P(\vec{x}_i \given C_2, \vec{x}_j)$ for the pairs we identify. Comparison with the dashed lines corresponding to posterior probabilities of 50\% and 90\% indicate that the majority of these binaries are detected with very high significance. 
 
@@ -395,7 +418,7 @@ Of the sample identified by CG04, we redetect 707 pairs ($\approx 70$\%) with a 
 \end{center}
 \end{figure*}
 
-
+\end{comment}
 
 
 
@@ -408,6 +431,9 @@ Of the sample identified by CG04, we redetect 707 pairs ($\approx 70$\%) with a 
 %\label{fig:test_corner}
 %\end{center}
 %\end{figure}
+
+
+
 
 \section{Application to the Tycho-2 Catalog}
 
