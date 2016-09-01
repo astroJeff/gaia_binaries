@@ -375,15 +375,16 @@ where $s = \theta D$ and $V = \Delta \mu D$.
 
 Through their search algorithm, they find 1147 candidate pairs in the rNLTT catalog. In our search through the rNLTT catalog using our algorithm here, we identify 1189 pairs in the rNLTT catalog with a posterior probability $>50$\%. Although the yield of wide binaries is remarkably similar despite very different search algorithms, the overlap in the two samples (number of redetections) is only 620 pairs. 
 
-The differences in the two samples are illustrative. Of the 1147 CG04 pairs, 80 pairs have one or both stars missing from the rNLTT catalog. A further 184 pairs have one or both stars without proper motion uncertainties for one of the components. This typically occurs because Luyten identified the pair as a true binary and only listed the joint proper motion \citep{chaname04}. By removing these stars when selecting a clean catalog to search through, we are insensitive to these binaries, which are likely true pairs. We are left with 883 pairs of stars in the CG04 catalog which our algorithm should detect. Of these, 263 have posterior probabilities less than 50\%, leaving us with 620 redirected pairs. These 263 pairs have either separations or proper motions too large for our algorithm to identify with confidence that these are true binaries. In some cases, the posterior probability is just below 50\%, in which case our assumed distance of 100 pc could responsible for our non-detection. Astrometric parallax would be helpful for identifying these marginal cases in the future.
 
 
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\columnwidth]{../figures/rNLTT_CG04_pos_mu.pdf}
+\caption{ The top panel compares the $\theta$ and $\Delta \mu$ distribution expected from a set of wide binaries in blue contours (at 100 pc) with wide binaries identified by CG04. Pairs that we find have $P(C_2 \given \vec{x}_i, \vec{x}_j) > 50\%$ (filled, black circles) typically have smaller $\theta$ and $\Delta \mu$, while pairs which our method rejects (open, red circles) are found at larger separations and proper motion differences. The bottom panel indicates those pairs identified by our method that were undetected by CG04. Uncertainties on $\Delta \mu$ are typically $\approx$10 mas yr$^{-1}$. }
+\label{fig:rNLTT_theta_mu}
+\end{center}
+\end{figure}
 
-In addition to the 620 redetections, our method identifies five detected pairs were components of pairs in the CG04 catalog, but identified with different companions by our method; each of these five were found to be part of a triple system, in which our method matched a different pair of stars within the triple. Actually there were four triples, but one was matched twice producing five pairs. {\bf There are undoubtedly other triples in this sample. Write a code block to search specifically for higher order systems.}
-
-
-Finally, we identify an additional 564 stellar pairs with posterior probabilities above 50\% that were not identified by CG04. These binaries are all detected with high significance, and we therefore suspect they are genuine pairs. It is worth exploring why \citet{chaname04} did not detect these pairs.
-%44 of these are in the CG04 catalog, but ultimately ruled out as false positives for various reasons (22 because of ``uncertain classification", 15 because of ``inconsistent RPM positions", and seven because of ``large proper motion differences"). 
 
 
 \begin{figure*}
@@ -393,6 +394,24 @@ Finally, we identify an additional 564 stellar pairs with posterior probabilitie
 \label{fig:NLTT_probs}
 \end{center}
 \end{figure*}
+
+
+
+The differences in the two samples are illustrative. Of the 1147 CG04 pairs, 80 pairs have one or both stars missing from the rNLTT catalog. A further 339 pairs have identical positions, proper motions, or one or both stars without proper motion uncertainties for one of the components. This typically occurs because Luyten identified the pair as a true binary and used characteristics of both stars in determining the system's astrometry \citep{chaname04}. By removing these stars when selecting a clean catalog to search through, we are insensitive to these binaries, which are likely true pairs. We are left with 728 pairs of stars in the CG04 catalog which our algorithm should detect. The $\theta$ and $\Delta \mu$ distribution of these binaries with posterior probabilities above 50\% (filled, black circles) and with probabilities below 50\% (open, red circles) are shown in the top panel of Figure \ref{fig:rNLTT_theta_mu}. 
+
+
+253 pairs in CG04 are rejected as they have either separations or proper motions too large for our algorithm to identify with confidence that these are true binaries. These pairs have angular separations extending out to several 100 mas yr$^{-1}$, although in Figure \ref{fig:rNLTT_theta_mu} we only focus on those pairs within 150 mas yr$^{-1}$. In some of these cases, the posterior probability is near, but just below, 50\% in which case our assumed distance of 100 pc (or 50\% binary fraction) could responsible for our non-detection. Astrometric parallax would be helpful for identifying these marginal cases in the future. As such, the results from our method here should be taken as a demonstration of how our method compares to previous searches for wide binaries rather than a conclusive statement as to the nature of these pairs.
+
+
+
+In addition to the 620 redetections, our method identifies five detected pairs were components of pairs in the CG04 catalog, but identified with different companions by our method; each of these five were found to be part of a triple system, in which our method matched a different pair of stars within the triple. Actually there were four triples, but one was matched twice producing five pairs. {\bf There are undoubtedly other triples in this sample. Write a code block to search specifically for higher order systems.}
+
+
+Finally, we identify an additional 564 stellar pairs with posterior probabilities above 50\% that were not identified by CG04. Only 132 of these have independently measured positions and proper motions. These binaries are all detected with high significance, and we therefore suspect they are genuine pairs. The bottom panel of Figure \ref{fig:rNLTT_theta_mu} shows the distribution of these pairs in $\theta$ and $\Delta \mu$. The majority of these pairs, unidentified by CG04, lack $B$ and $J$ photometry and were therefore removed by CG04 in their attempt to identify a set of wide binaries from a heterogeneous data set.
+
+%44 of these are in the CG04 catalog, but ultimately ruled out as false positives for various reasons (22 because of ``uncertain classification", 15 because of ``inconsistent RPM positions", and seven because of ``large proper motion differences"). 
+
+
 
 
 Separately, we run our detection algorithm on the sample by CG04 and compare these probabilities to the pairs we identify in the rNLTT catalog. The first panel of Figure \ref{fig:NLTT_probs} shows the posterior probabilities for the set of binaries we detect (solid lines), detected and accepted by CG04 (dotted lines), and detected but ultimately rejected by CG04 (dashed lines). The distribution of posterior probabilities for the CG04 pairs indicates that binaries are typically either detected or rejected with a high likelihood by our method; there are relatively few marginal cases with posterior probabilities near 50\%.
@@ -440,15 +459,11 @@ Of the sample identified by CG04, we redetect 707 pairs ($\approx 70$\%) with a 
 We apply our method to the Tycho-2 catalog, prior to its astrometric updates from {\it Gaia}. Figure \ref{fig:tycho-2_color_mag} demonstrates a distribution of a subset of the stars in the Tycho-2 catalog. We also indicate colors corresponding to different Main Sequence stars (black, dashed) and lines of constant distance (red, dashed) for Main Sequence stars. The bulk of the Main Sequence stars in the Tycho-2 catalog are at distances exceeding 100 pc. As with the rNLTT catalog, we lack astrometric parallax measurements, therefore we set all stars to a distance of 100 pc. Since the probability of any pair of stars being a true binary increases with closer distances, and Figure \ref{fig:tycho-2_color_mag} indicates that most stars are at a distance greater than 100 pc, our approximation overestimates the binary probability of pairs.
 
 
-From the $2.5\times10^6$ stars in the catalog, we select those that have measured proper motions, leaving us with $\sim2\times10^6$ stars to search from. This set is nearly two orders of magnitude larger than the rNLTT catalog, and designing a computationally efficient algorithm is crucial to making the identification of wide binaries a tractable problem. Our method is as follows. For every star, we select each of the nearby stars within 1\degree. For typical stellar densities in the Tycho-2 sample, this corresponds to $\approx50$ stars. For each of these potential pairs, we perform a crude calculation of $P(\vec{x}_i \given C_2, \vec{x}_j)$: we use a Monte Carlo integration with only 10 random samples to calculate the integral in Equation \ref{eq:P_binary_rNLTT}. Pairs with a binary likelihood of zero are removed. For pairs with non-zero binary likelihoods resulting from our crude integration, we then calculate the binary likelihood (using 10$^4$ Monte Carlo samples for the integral of $\Delta \mu$) and the random alignment likelihood. We select pairs with posterior probabilities of being a binary at greater than 50\%.
-
-
-Although seemingly crude, our initial integration using only 10 random samples is designed to quickly remove the vast majority of non-matching pairs that lie entirely in zero probability regions of $\theta-\Delta \mu$ parameter space. These integrations are the most computationally expensive aspect of the algorithm. Some genuine binaries may be missed by this process (false negatives); however in practice this method is extremely efficient at reducing the sample to focus on those binaries of interest. True binaries lost by only using 10 samples tend to lie at the edge of the true binary distribution, and end up as marginal classifications. {\bf Include more extensive testing on a subsample of Tycho-2 catalog.}
-
+From the $2.5\times10^6$ stars in the catalog, we select those that have measured proper motions, leaving us with $\sim2\times10^6$ stars to search from. This set is nearly two orders of magnitude larger than the rNLTT catalog, and designing a computationally efficient algorithm is crucial to making the identification of wide binaries a tractable problem. Our method is as follows. For every star, we select each of the nearby stars within 1\degree. For typical stellar densities in the Tycho-2 sample, this corresponds to $\approx50$ stars. For each of these potential pairs, we apply a second criterion: we remove pairs with a binary likelihood, $P(\vec{x}_i \given C_2, \vec{x}_j)$, equal to zero $\Delta \mu$ at the 3-$\sigma$ limit and $\theta$. For pairs with non-zero binary likelihoods resulting, we then calculate the binary likelihood (using 10$^4$ Monte Carlo random samples for the integral of $\Delta \mu$) and the random alignment likelihood. We select pairs with posterior probabilities of being a binary at greater than 50\%.
  
  
  
-\begin{figure}[h!]
+\begin{figure}
 \begin{center}
 \includegraphics[width=0.95\columnwidth]{../figures/tycho2_colors.pdf}
 \caption{ The color-magnitude distribution of a random subset of the Tycho-2 catalog. Vertical dashed lines (black) indicate colors roughly corresponding to the stellar types labeled at the bottom of the figure for Main Sequence stars. Since reddening is ignored, these are only approximate. Slanted dashed lines (red) indicate corresponding distances for Main Sequence stars. The bulk of the Main Sequence stars are at distances exceeding 100 pc.}
@@ -458,6 +473,21 @@ Although seemingly crude, our initial integration using only 10 random samples i
 
 
 
+Figure \ref{fig:tycho-2_theta_mu} demonstrates the first results from our search for binaries in the Tycho-2 catalog. We find some 8500 pairs with a posterior probability of being a true binary above 50\% from the first 20\% of the catalog. This implies there are some 40,000 wide binaries in the true catalog. This remains to be seen. Many or even most of these binaries may be random alignments, which astrometric parallax can help discern. 
+
+Nevertheless, from Figure \ref{fig:tycho-2_theta_mu} it is clear the systematics involved with finding binaries in the Tycho-2 Catalog are substantially different from the rNLTT catalog. Principally, the proper motion separation is substantially more dense in the Tycho-2 catalog. At the same time, the Tycho-2 catalog has a typical uncertainty on $\Delta \mu$ of $\approx4$ mas yr$^{-1}$, substantially lower than the rNLTT catalog. Nevertheless, we expect the rate of false positives to be much higher. These random alignments could be the cause of the increased density of identified matches at angular separations $>$50\asec, which is unexpected to be produced by a population of genuine binaries. This leads us to one of our primary conclusions: {\it even with proper motion precisions of order a few mas yr$^{-1}$, samples of common proper motion binaries identified in low proper motion catalogs will contain a large number of false positives. } {\bf Previous statement may need to be made later in paper when we can actually separate out true from false pairs using Gaia astrometry.} An additional dimension of phase space is required to separate true binaries from unassociated stellar pairs.
+
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\columnwidth]{../figures/tycho-2_theta_mu.pdf}
+\caption{ The $\theta-\Delta \mu$ distribution of the first set of pairs in the Tycho-2 catalog. Since we have assumed all stars are at a distance of 100 pc, there is a sharp cut-off in the distribution of angular separations of identified binaries. We compare these stars to the distribution of binary probabilities in blue contours. Uncertainties on $\Delta \mu$ are typically $\approx$4 mas yr$^{-1}$. }
+\label{fig:tycho-2_theta_mu}
+\end{center}
+\end{figure}
+
+
 
 
 \section{Application to the Gaia-Tycho-2 Catalog}
@@ -465,13 +495,13 @@ Although seemingly crude, our initial integration using only 10 random samples i
 {\bf This will be the meat of the paper.}
 
 \subsection{Identifying Wide Binaries}
-{\bf Apply our method to the Gaia-Tycho-2 catalog.}
+{\bf Apply our method to the Gaia-Tycho-2 catalog. Description of application to catalog here. Overall yields.}
 
 \subsection{Determining Stellar Type/Classification}
 {\bf Binaries with similar types (twin binaries). Binaries with subdwarfs or giants. WD wide binaries. Provide these distributions of stellar combinations, maybe as a table?}
 
 \subsection{Specific Nearby Wide Binaries}
-{\bf Redetect binaries in \citet{shaya11}? Find other nearby binaries that we should list specifically.}
+{\bf Redetect binaries in \citet{shaya11}? Find other nearby binaries that we should list specifically. This may be better presented in an appendix.}
 
 \subsection{Identified Triple Systems} 
 {\bf We already know there are some. Let's focus on just astrometric triples - there will be lots of spectroscopic binaries as components of our wide binaries, but this will require substantial cross matching, I think.}
