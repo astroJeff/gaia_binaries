@@ -296,20 +296,15 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
 
     # No proper motion error included
     if delta_mu_ra_err == 0.0 or delta_mu_dec_err == 0.0:
-
         delta_mu = np.sqrt((mu_ra1-mu_ra2)**2 + (mu_dec1-mu_dec2)**2)
         P_mu = 2.0*np.pi*delta_mu * density
 
-    elif delta_mu_ra_err > 0.0 and delta_mu_dec_err > 0.0:
-
+    # Monte Carlo delta mu integration
+    else:
         delta_mu_ra = normal(loc=(mu_ra1-mu_ra2), scale=delta_mu_ra_err, size=nsamples)
         delta_mu_dec = normal(loc=(mu_dec1-mu_dec2), scale=delta_mu_dec_err, size=nsamples)
         delta_mu = np.sqrt(delta_mu_ra**2 + delta_mu_dec**2)
         P_mu = (1.0/nsamples) * np.sum(2.0*np.pi*delta_mu * density)
-
-    else:
-        print "delta_mu_ra_err and delta_mu_dec_err must both be greater than 0"
-        return
 
     return P_mu
 

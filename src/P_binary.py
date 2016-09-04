@@ -11,7 +11,6 @@ import const as c
 
 
 binary_set = None
-binary_set_dist = None
 binary_kde = None
 
 # Random binary parameters
@@ -42,7 +41,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e4, a_high=1.0e6, num_sys=1):
+def get_a(a_low=1.0e2, a_high=1.0e7, num_sys=1):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -195,7 +194,7 @@ def get_proj_sep(f, e, sep, Omega, omega, inc):
     return proj_sep
 
 
-def get_pm(f, e, a, P, Omega, omega, inc):
+def get_delta_v_trans(f, e, a, P, Omega, omega, inc):
     """ Return the tangential peculiar velocity
 
     Parameters
@@ -204,8 +203,10 @@ def get_pm(f, e, a, P, Omega, omega, inc):
         True anomaly (radians)
     e : float
         Eccentricity
-    sep : float
-        Physical separation : a*[1-e*cos(f)]
+    a : float
+        Physical separation : a*[1-e*cos(f)] (cm)
+    P : float
+        Orbital period (sec)
     Omega : float
         Longitude of the ascending node (radians)
     omega : float
@@ -215,20 +216,20 @@ def get_pm(f, e, a, P, Omega, omega, inc):
 
     Returns
     -------
-    pm : float
+    delta_v_trans : float
         Tangential velocity (km/s)
     """
 
     r_dot = a * e * np.sin(f) / np.sqrt(1.0 - e*e) * (2.0*np.pi/P)
     r_f_dot = a / np.sqrt(1.0 - e*e) * (1.0 + e*np.cos(f)) * (2.0*np.pi/P)
-    pm_1 = r_dot * (np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
-    pm_2 = r_f_dot * (np.cos(Omega)*np.sin(omega+f) + np.sin(Omega)*np.cos(omega+f)*np.cos(inc))
-    pm = np.sqrt(pm_1**2 + pm_2**2) / 1.0e5
+    delta_vel_1 = r_dot * (np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
+    delta_vel_2 = r_f_dot * (np.cos(Omega)*np.sin(omega+f) + np.sin(Omega)*np.cos(omega+f)*np.cos(inc))
+    delta_v_trans = np.sqrt(delta_vel_1**2 + delta_vel_2**2) / 1.0e5
 
-    return pm
+    return delta_v_trans
 
 
-def calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc):
+def calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc):
     """ From the random orbits, calculate the projected separation, velocity
 
     Parameters
@@ -254,7 +255,7 @@ def calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc):
     -------
     proj_sep : float
         Projected separations (ndarray, Rsun)
-    pm : float
+    delta_v_trans : float
         Tangential velocities (ndarray, km/s)
     """
 
@@ -271,40 +272,37 @@ def calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc):
     # Orbital period in days
     P = a_to_P(M1, M2, a)
     # Calculate proper motions
-    pm = get_pm(f, e, a*c.Rsun_to_cm, P*c.day_to_sec, Omega, omega, inc)
+    delta_v_trans = get_delta_v_trans(f, e, a*c.Rsun_to_cm, P*c.day_to_sec, Omega, omega, inc)
 
-    return proj_sep, pm
+    return proj_sep, delta_v_trans
 
 
 
-def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
+def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde'):
     """ This function calculates the probability of a
     random star having the observed proper motion
 
     Parameters
     ----------
-    theta : float
-        Angular distance between two stars
-    delta_mu : float
-        Proper Motion difference between two stars
-    dist : float
-        Distance to the stellar population (pc)
+    proj_sep : float
+        Projected separation between two stars
+    delta_v_trans : float
+        Transverse velocity difference between two stars
     method : string
         Method to perform 2D interpolation (options:kde)
 
     Returns
     -------
-    P(theta, delta_mu) : float
+    P(proj_sep, delta_v_trans) : float
         Probability that angular separation, pm separation
         is due to a genuine binary
     """
 
     # Catalog check
     global binary_set
-    global binary_set_dist
 
-    if binary_set is None or binary_set_dist != dist:
-        generate_binary_set(num_sys=num_sys, dist=dist)
+    if binary_set is None or num_sys != len(binary_set):
+        generate_binary_set(num_sys=num_sys)
 
     # if sim_binaries is None and binary_set is None:
     #     print "No included set of simulated binaries."
@@ -332,17 +330,17 @@ def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
     if method is 'kde':
         # Use a Gaussian KDE
         global binary_kde
-        if binary_kde is None: binary_kde = gaussian_kde((binary_set["theta"], binary_set["delta_mu"]))
+        if binary_kde is None: binary_kde = gaussian_kde((binary_set["proj_sep"], binary_set["delta_v_trans"]))
 
 
-        if isinstance(delta_mu, np.ndarray) and isinstance(theta, np.ndarray):
-            values = np.vstack([theta, delta_mu])
+        if isinstance(delta_v_trans, np.ndarray) and isinstance(proj_sep, np.ndarray):
+            values = np.vstack([proj_sep, delta_v_trans])
             prob_binary = binary_kde.evaluate(values)
-        elif isinstance(delta_mu, np.ndarray):
-            values = np.vstack([theta*np.ones(len(delta_mu)), delta_mu])
+        elif isinstance(delta_v_trans, np.ndarray):
+            values = np.vstack([proj_sep*np.ones(len(delta_v_trans)), delta_v_trans])
             prob_binary = binary_kde.evaluate(values)
         else:
-            prob_binary = binary_kde.evaluate([theta, delta_mu])
+            prob_binary = binary_kde.evaluate([proj_sep, delta_v_trans])
 
     else:
         print "You must input an appropriate method."
@@ -353,15 +351,13 @@ def get_P_binary(theta, delta_mu, dist=100.0, num_sys=100000, method='kde'):
 
 
 
-def generate_binary_set(num_sys=100000, dist=100.0):
+def generate_binary_set(num_sys=100000):
     """ Create set of binaries to be saved to P_binary.binary_set
 
     Parameters
     ----------
     num_sys : int
         Number of random binaries to generate (default = 1000000)
-    dist : float
-        Distance to binaries (default = 100 pc)
 
     Returns
     -------
@@ -369,24 +365,24 @@ def generate_binary_set(num_sys=100000, dist=100.0):
     """
 
     global binary_set
-    global binary_set_dist
 
     # Create random binaries
     M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
     # Get random projected separations, velocities
-    proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
+    proj_sep, delta_v_trans = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
 
-    binary_set = np.zeros(num_sys, dtype=[('proj_sep','f8'),('pm','f8'),('theta', 'f8'),('delta_mu','f8')])
-    # Helper function
-    def pm_at_dist(pm, dist=100.0):
-        return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
+    binary_set = np.zeros(num_sys, dtype=[('proj_sep', 'f8'),('delta_v_trans','f8')])
+    # # Helper function
+    # def pm_at_dist(pm, dist=100.0):
+    #     return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
+    #
+    # binary_set['proj_sep'] = proj_sep
+    # binary_set['pm'] = pm
+    # binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
+    # binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
 
     binary_set['proj_sep'] = proj_sep
-    binary_set['pm'] = pm
-    binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
-    binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
-
-    binary_set_dist = dist
+    binary_set['delta_v_trans'] = delta_v_trans
 
     return
 
@@ -410,11 +406,8 @@ def create_plot_binary(dist=100.0, num_sys=100, bins=25):
     """
 
     global binary_set
-    global binary_set_dist
 
-    if binary_set is None or binary_set_dist != dist:
-        generate_binary_set(num_sys=num_sys, dist=dist)
-    if binary_set is not None and len(binary_set) != num_sys:
+    if binary_set is None or len(binary_set) != num_sys:
         generate_binary_set(num_sys=num_sys, dist=dist)
 
 
