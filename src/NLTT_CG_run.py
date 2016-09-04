@@ -91,6 +91,24 @@ for pair in CG_pairs:
     delta_pm_ra_err = np.sqrt(star1[4]**2 + star2[4]**2)
     delta_pm_dec_err = np.sqrt(star1[5]**2 + star2[5]**2)
                 
+
+    # If uncertainties are zero
+    if delta_pm_ra_err == 0.0 or delta_pm_dec_err == 0.0:
+        prob_temp = np.zeros(1, dtype=dtype)
+        prob_temp['NLTT_1'][0] = pair['NLTT-A']
+        prob_temp['NLTT_2'][0] = pair['NLTT-B']
+        prob_temp['P_random'][0] = -1
+        prob_temp['P_binary'][0] = -1
+        prob_temp['P_theta'][0] = -1
+        prob_temp['P_mu'][0] = -1
+        prob_temp['P_posterior'][0] = -1
+        prob_temp['CCode'][0] = pair['CCode']
+        prob_out_CG = np.append(prob_out_CG, prob_temp[0])
+  
+        continue
+
+
+
         
     # Get probability of random alignment
     prob_random, P_pos, P_mu = P_random.get_P_random_alignment(star1[0], star1[1], star2[0], star2[1],
