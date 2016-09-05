@@ -1,7 +1,9 @@
 import numpy as np
 from numpy.random import normal, multivariate_normal
+from scipy.stats import norm
 import P_binary
 import P_random
+import const as c
 from astropy.table import Table
 import pickle
 import time
@@ -56,11 +58,12 @@ def match_binaries(t):
         if i%1000 == 0: print i, time.time()-start
 
 
-        # Get ids of all stars within 1 degree
+        # Get ids of all stars within 1 degree and parallaxes in agreement within 3-sigma
         i_star2 = np.arange(length - i - 1) + i + 1
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
-        ids_good = i_star2[np.where(theta < 1.0)[0]]
-
+        delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
+        delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
+        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
 
         # Move on if no matches within 1 degree
         if len(ids_good) == 0: continue
@@ -81,8 +84,18 @@ def match_binaries(t):
 
         # Identify potential matches as ones with non-zero P(binary)
         mu_diff_vector = np.amax(np.vstack([mu_diff_3sigma, 0.1*np.ones(len(ids_good))]), axis=0)
-        ids_good_binary = np.where(P_binary.get_P_binary(theta_good * 3600.0, mu_diff_vector))[0]
+        # dist in pc
+        min_dist = 1.0e3 / np.amax(np.vstack([np.ones(len(ids_good)) * (t['plx'][i]+3.0*t['plx_err'][i]), t['plx'][ids_good]+3.0*t['plx_err'][ids_good]]), axis=0)
+        # projected separation in pc
+        proj_sep_vector = (theta_good*np.pi/180.0) * min_dist * (c.pc_to_cm / c.Rsun_to_cm)
+        # Transverse velocity vector in km/s
+        delta_v_trans_vector = (mu_diff_vector/1.0e3/3600.0*np.pi/180.0) * min_dist * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
+        ids_good_binary = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
+
+        # If no matches, move on
         if len(ids_good_binary) == 0: continue
+
+        # Ids of all matches
         ids_good_binary_all = ids_good[ids_good_binary]
 
 
@@ -98,12 +111,17 @@ def match_binaries(t):
             star2 = t['ra'][j], t['dec'][j], t['mu_ra'][j], t['mu_dec'][j], t['mu_ra_err'][j], t['mu_dec_err'][j]
 
 
-            prob_posterior = calc_P_posterior(star1, star2, pos_density, mu_density, i, j, catalog=t)
+            # Calculate the posterior probability
+            prob_posterior, prob_random, prob_binary = calc_P_posterior(star1, star2, pos_density, pm_density, i, j, t)
 
 
-            print i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
+            # Output to stdout non-zero probabilities
+            print i, j, t['NLTT'][i], t['NLTT'][j], t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
 
-            if prob_posterior > 0.5:
+
+            # Select potential matches
+            # if prob_posterior > 0.5:
+            if prob_posterior > 1.0e-2:
                 prob_temp = np.zeros(1, dtype=dtype)
                 prob_temp[0] = i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
                 prob_out = np.append(prob_out, prob_temp)
@@ -114,7 +132,7 @@ def match_binaries(t):
     return prob_out
 
 
-def calc_P_posterior(star1, star2, pos_density, mu_density, id1, id2, catalog=t):
+def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
 
 
     ####################### Binary Likelihood #########################
@@ -137,11 +155,11 @@ def calc_P_posterior(star1, star2, pos_density, mu_density, id1, id2, catalog=t)
     delta_mu_sample = np.sqrt(delta_mu_ra_sample**2 + delta_mu_dec_sample**2)
 
     # Generate random parallaxes from uncertainties in primary star
-    plx_sample = normal(loc=star1['plx'], scale=star1['plx_err'], \
+    plx_sample = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], \
                                               size=size_integrate_full)
 
     # Distance in pc is just parallax in asec
-    dist_sample = plx_sample * 1.0e3 # convert from mas to asec
+    dist_sample = 1.0e3 / plx_sample  # convert from mas to asec
 
     # Convert from proper motion difference (mas/yr) to transverse velocity difference (km/s)
     delta_v_trans = (delta_mu_sample/1.0e3/3600.0*np.pi/180.0) * dist_sample * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
@@ -152,11 +170,14 @@ def calc_P_posterior(star1, star2, pos_density, mu_density, id1, id2, catalog=t)
     # Find binary probabilities
     prob_tmp = P_binary.get_P_binary(proj_sep, delta_v_trans)
 
-    # Now, let's add parallax probabilities
-    
+    # Now, let's add probabilities for second star's parallax to match
+    prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
 
+    # Parallax prior -> Lenz-Kelker bias goes here. For now, assume flat prior
+    prob_plx_prior = 1.0
 
-    prob_binary = 1.0/size_integrate_full * np.sum(prob_tmp)
+    # Monte Carlo integral
+    prob_binary = 1.0/size_integrate_full * np.sum(prob_tmp * prob_plx_2 * prob_plx_prior)
 
 
 
@@ -173,8 +194,13 @@ def calc_P_posterior(star1, star2, pos_density, mu_density, id1, id2, catalog=t)
                                       pos_density=pos_density, pm_density=pm_density,
                                       catalog=t)
 
+    # Now, need to compute parallax integrals
+    # Lenz-Kelker bias goes here. For now, assume flat prior, so integrals equal unity
+    prob_plx_1 = 1.0
+    prob_plx_2 = 1.0
+
 
 
     ####################### Posterior Probability #########################
     # Save those pairs with posterior probabilities above 50%
-    return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary)
+    return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary), prob_random, prob_binary
