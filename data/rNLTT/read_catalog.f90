@@ -18,7 +18,7 @@
 
 
       write(23,*) "NLTT	ra	dec	mu_ra	mu_dec	mu_ra_err	mu_dec_err", &
-        & "	V	B	R	J	H	K"
+        & "	HIP	V	B	R	J	H	K"
 
       do
         read(22,100) x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19, &
@@ -28,7 +28,7 @@
 
         if (io<0) exit
 
-        write(23,*) x1,x3,x4,x5,x6,x7,x8,x9,x24,x25,x32,x33,x34
+        write(23,*) x1,x3,x4,x5,x6,x7,x8,x20,x9,x24,x25,x32,x33,x34
       end do
 
 !      write(*,*) x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19, &
