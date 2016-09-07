@@ -49,7 +49,8 @@ def match_binaries(t):
     length = len(t)
     print "We are testing", length, "stars..."
 
-    dtype = [('i_1','i4'),('i_2','i4'),('ID_1','i4'),('ID_2','i4'),('P_random','f8'),('P_binary','f8'),('P_posterior','f8')]
+    dtype = [('i_1','i4'),('i_2','i4'),('ID_1','i4'),('ID_2','i4'),('P_random','f8'),('P_binary','f8'),('P_posterior','f8'), \
+            ('theta','f8'), ('mu_ra_1','f8'), ('mu_dec_1','f8'), ('mu_ra_2','f8'), ('mu_dec_2','f8'), ('plx_1','f8'), ('plx_2','f8')]
     prob_out = np.array([], dtype=dtype)
 
 
@@ -63,7 +64,7 @@ def match_binaries(t):
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
-        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
+        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 2.0*delta_plx_err)[0]])
 
         # Move on if no matches within 1 degree
         if len(ids_good) == 0: continue
@@ -115,16 +116,22 @@ def match_binaries(t):
             prob_posterior, prob_random, prob_binary = calc_P_posterior(star1, star2, pos_density, pm_density, i, j, t)
 
 
-            # Output to stdout non-zero probabilities
-            print i, j, t['NLTT'][i], t['NLTT'][j], t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
+            # # Output to stdout non-zero probabilities
+            # print i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
 
 
             # Select potential matches
             # if prob_posterior > 0.5:
             if prob_posterior > 1.0e-2:
                 prob_temp = np.zeros(1, dtype=dtype)
-                prob_temp[0] = i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
+                theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][j], t['dec'][j])
+                prob_temp[0] = i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior, \
+                                theta, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], t['plx'][i], \
+                                t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
+
+                print t['ID'][i], t['ID'][j], theta, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
+                        t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], prob_random, prob_binary, prob_posterior
 
 
     print "Elapsed time:", time.time() - start, "seconds"
@@ -172,6 +179,9 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
 
     # Now, let's add probabilities for second star's parallax to match
     prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
+
+    #print "match:", t['plx'][id1], t['plx'][id2], t['plx_err'][id1], t['plx_err'][id2], np.mean(proj_sep), np.mean(delta_v_trans), np.mean(delta_mu_sample)
+    #print np.mean(prob_plx_2), t['plx'][id1], t['plx_err'][id1], t['plx'][id2], t['plx_err'][id2]
 
     # Parallax prior -> Lenz-Kelker bias goes here. For now, assume flat prior
     prob_plx_prior = 1.0
