@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import gaussian_kde
 from numpy.random import normal
-
+import const as c
 
 
 mu_kde = None
@@ -137,7 +137,19 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
     elif method is 'kde':
         # Use a Gaussian KDE
         global pos_kde
-        if pos_kde is None: pos_kde = gaussian_kde((catalog["ra"], catalog["dec"]))
+        if pos_kde is None:
+
+            if c.kde_subset:
+                # Select a subset of catalog for the KDE
+                ra_ran = np.copy(catalog['ra'])
+                dec_ran = np.copy(catalog['dec'])
+                np.random.shuffle(ra_ran)
+                np.random.shuffle(dec_ran)
+
+                pos_kde = gaussian_kde((ra_ran[0:100000], dec_ran[0:100000]))
+            else:
+                pos_kde = gaussian_kde((catalog['ra'], catalog['dec']))
+
         sigma_star = pos_kde.evaluate((ra, dec))
     else:
         print "You must provide a valid method"
@@ -216,7 +228,20 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='kde'):
     if method is 'kde':
         # Use a Gaussian KDE
         global mu_kde
-        if mu_kde is None: mu_kde = gaussian_kde((catalog["mu_ra"], catalog["mu_dec"]))
+        if mu_kde is None:
+
+            if c.kde_subset:
+                # Select a subset of catalog for the KDE
+                mu_ra_ran = np.copy(catalog['mu_ra'])
+                mu_dec_ran = np.copy(catalog['mu_dec'])
+                np.random.shuffle(mu_ra_ran)
+                np.random.shuffle(mu_dec_ran)
+
+                mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]))
+            else:
+                # Use the whole catalog
+                mu_kde = gaussian_kde((catalog['mu_ra'], catalog['mu_dec']))
+
         sigma_mu = mu_kde.evaluate((mu_ra, mu_dec))
     elif method is 'empirical':
         n_stars_near = nstars_nearby_mu(mu_ra, mu_dec, radius=rad, catalog=catalog)-1

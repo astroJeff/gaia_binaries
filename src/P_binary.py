@@ -301,7 +301,7 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde'):
     # Catalog check
     global binary_set
 
-    if binary_set is None or num_sys != len(binary_set):
+    if binary_set is None:
         generate_binary_set(num_sys=num_sys)
 
     # if sim_binaries is None and binary_set is None:

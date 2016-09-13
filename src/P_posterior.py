@@ -35,7 +35,8 @@ def match_binaries(t):
 
     # Generate simulated binaries
     print "Generating binaries..."
-    P_binary.generate_binary_set(num_sys=100000)
+    # NOTE: Computation time scales roughly with num_sys here:
+    P_binary.generate_binary_set(num_sys=10000)
 
 
     # Generate random alignment KDEs using first entry as a test position
@@ -130,7 +131,7 @@ def match_binaries(t):
                                 t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
-                print t['ID'][i], t['ID'][j], t['NLTT'][i], t['NLTT'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
+                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
                         t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], prob_random, prob_binary, prob_posterior
 
 
@@ -201,6 +202,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     prob_random, prob_pos, prob_mu = P_random.get_P_random_alignment(star1[0], star1[1], star2[0], star2[1],
                                       star1[2], star1[3], star2[2], star2[3],
                                       delta_mu_ra_err=delta_mu_ra_err, delta_mu_dec_err=delta_mu_dec_err,
+                                      nsamples=100,
                                       pos_density=pos_density, pm_density=pm_density,
                                       catalog=t)
 
