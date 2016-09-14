@@ -146,9 +146,10 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
                 np.random.shuffle(ra_ran)
                 np.random.shuffle(dec_ran)
 
-                pos_kde = gaussian_kde((ra_ran[0:100000], dec_ran[0:100000]))
+                # KDE needs to be in terms of (ra*cos(dec), dec) so units are deg^-2
+                pos_kde = gaussian_kde((ra_ran[0:100000] * np.cos(dec_ran[0:100000]*np.pi/180.0), dec_ran[0:100000]))
             else:
-                pos_kde = gaussian_kde((catalog['ra'], catalog['dec']))
+                pos_kde = gaussian_kde((catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']))
 
         sigma_star = pos_kde.evaluate((ra, dec))
     else:

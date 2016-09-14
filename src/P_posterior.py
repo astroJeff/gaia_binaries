@@ -3,6 +3,7 @@ from numpy.random import normal, multivariate_normal
 from scipy.stats import norm
 import P_binary
 import P_random
+import parallax
 import const as c
 from astropy.table import Table
 import pickle
@@ -11,16 +12,19 @@ import time
 
 
 size_integrate = 10          # Number of samples for delta mu integration for initial search
-size_integrate_full = 1000  # Number of samples for delta mu integration for possible matches
+size_integrate_full = 1000   # Number of samples for delta mu integration for possible matches
+size_integrate_plx = 10      # Number of samples for parallax integration for random
 
 
-def match_binaries(t):
+def match_binaries(t, subsample=None):
     """ Function to match binaries within a catalog
 
     Arguments
     ---------
     t : ndarray
         Catalog for self-compare for matching
+    subsample : int (optional)
+        if provided, program ends after only searching for matches to subset of this size
 
     Returns
     -------
@@ -45,6 +49,8 @@ def match_binaries(t):
     pos_density = P_random.get_sigma_pos(t['ra'][0], t['dec'][0], catalog=t, method='kde')
     pm_density = P_random.get_sigma_mu(t['mu_ra'][0], t['mu_dec'][0], catalog=t, method='kde')
 
+    # Generate parallax KDE for parallax prior
+    parallax.set_plx_kde(t)
 
     # Now, let's calculate the probabilities
     length = len(t)
@@ -58,6 +64,9 @@ def match_binaries(t):
     for i in np.arange(length):
 
         if i%1000 == 0: print i, time.time()-start
+
+        if subsample is not None and i == subsample:
+            break
 
 
         # Get ids of all stars within 1 degree and parallaxes in agreement within 3-sigma
@@ -175,6 +184,13 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     # Find the physical separation (Rsun) from the angular separation (degree)
     proj_sep = (theta*np.pi/180.0) * dist_sample * (c.pc_to_cm / c.Rsun_to_cm)
 
+    # Jacobians for transforming from angular to physical units
+    # Units: [(km/s) / (mas/yr)]
+    jacob_dV_dmu = (1.0e3/plx_sample) * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
+    # Units: [(Rsun) / (deg.)]
+    jacob_ds_dtheta = (1.0e3/plx_sample) * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
+
+
     # Find binary probabilities
     prob_tmp = P_binary.get_P_binary(proj_sep, delta_v_trans)
 
@@ -185,10 +201,10 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     #print np.mean(prob_plx_2), t['plx'][id1], t['plx_err'][id1], t['plx'][id2], t['plx_err'][id2]
 
     # Parallax prior -> Lenz-Kelker bias goes here. For now, assume flat prior
-    prob_plx_prior = 1.0
+    prob_plx_prior = parallax.get_plx_prior(plx_sample)
 
     # Monte Carlo integral
-    prob_binary = 1.0/size_integrate_full * np.sum(prob_tmp * prob_plx_2 * prob_plx_prior)
+    prob_binary = 1.0/float(size_integrate_full) * np.sum(prob_tmp * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
 
 
 
@@ -207,10 +223,14 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
                                       catalog=t)
 
     # Now, need to compute parallax integrals
-    # Lenz-Kelker bias goes here. For now, assume flat prior, so integrals equal unity
-    prob_plx_1 = 1.0
-    prob_plx_2 = 1.0
+    # Monte Carlo these - random draws from Gaussian, evaluate parallax prior for random draws
+    plx_sample_1 = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], size=size_integrate_plx)
+    plx_sample_2 = normal(loc=t['plx'][id2], scale=t['plx_err'][id2], size=size_integrate_plx)
+    prob_plx_1 = 1.0/float(size_integrate_plx) * np.sum(parallax.get_plx_prior(plx_sample_1))
+    prob_plx_2 = 1.0/float(size_integrate_plx) * np.sum(parallax.get_plx_prior(plx_sample_2))
 
+    prob_parallax = prob_plx_1 * prob_plx_2
+    prob_random = prob_random * prob_parallax
 
 
     ####################### Posterior Probability #########################
