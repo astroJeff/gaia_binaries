@@ -64,7 +64,7 @@ def match_binaries(t):
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
-        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 2.0*delta_plx_err)[0]])
+        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
 
         # Move on if no matches within 1 degree
         if len(ids_good) == 0: continue
@@ -130,7 +130,7 @@ def match_binaries(t):
                                 t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
-                print t['ID'][i], t['ID'][j], theta, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
+                print t['ID'][i], t['ID'][j], t['NLTT'][i], t['NLTT'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
                         t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], prob_random, prob_binary, prob_posterior
 
 
