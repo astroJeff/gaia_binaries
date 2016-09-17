@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import gaussian_kde
+from sklearn.neighbors import KernelDensity
 from numpy.random import normal
 import const as c
 
@@ -200,7 +201,7 @@ def get_random_alignment_P_pos(ra1, dec1, ra2, dec2, density=None, catalog=None)
 
 
 
-def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='kde'):
+def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidth=None):
     """ This function calculates the local proper
     motion density of stars per (mas/yr)^2
 
@@ -213,7 +214,9 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='kde'):
     rad : float
         Search radius for calibration, empirical only (mas/yr)
     method : string
-        Method to perform 2D interpolation (options:kde)
+        Method to perform 2D interpolation (options:sklearn_kde, scipy_kde, empirical)
+    bandwidth : float
+        Bandwidth for KDE (optional; 0.5 is currently preferred)
 
     Returns
     -------
@@ -226,9 +229,10 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='kde'):
         print "You must include a catalog."
         return
 
-    if method is 'kde':
+    global mu_kde
+
+    if method is 'skipy_kde':
         # Use a Gaussian KDE
-        global mu_kde
         if mu_kde is None:
 
             if c.kde_subset:
@@ -238,18 +242,39 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='kde'):
                 np.random.shuffle(mu_ra_ran)
                 np.random.shuffle(mu_dec_ran)
 
-                mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]))
+                if bandwidth is None:
+                    mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]))
+                else:
+                    mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]), bw_method=bandwidth)
             else:
                 # Use the whole catalog
-                mu_kde = gaussian_kde((catalog['mu_ra'], catalog['mu_dec']))
+                if bandwidth is None:
+                    mu_kde = gaussian_kde((catalog['mu_ra'], catalog['mu_dec']))
+                else:
+                    mu_kde = gaussian_kde((catalog['mu_ra'], catalog['mu_dec']), bw_method=bandwidth)
 
         sigma_mu = mu_kde.evaluate((mu_ra, mu_dec))
+
+    elif method is 'sklearn_kde':
+        # Use the sklearn KDE algorithm
+        if mu_kde is None:
+            kwargs = {'kernel':'tophat'}
+            if bandwidth is None:
+                mu_kde = KernelDensity(**kwargs)
+            else:
+                mu_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
+            mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
+
+        values = np.array([mu_ra, mu_dec]).T
+        sigma_mu = np.exp(mu_kde.score_samples(values))
+
     elif method is 'empirical':
         n_stars_near = nstars_nearby_mu(mu_ra, mu_dec, radius=rad, catalog=catalog)-1
         sigma_mu = n_stars_near / (4.0*np.pi * rad**2)
     else:
         print "You must input an appropriate method."
-        print "Options: 'kde' or 'empirical'"
+        print "Options: 'scipy_kde', 'sklearn_kde', or 'empirical'"
+        print "sklearn_kde is the preferred method."
         return
 
     return sigma_mu
@@ -318,7 +343,7 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
         if method is 'empirical':
             density = get_sigma_mu(mu_ra1, mu_dec1, catalog=catalog, method='empirical')
         else:
-            density = get_sigma_mu(mu_ra1, mu_dec1, catalog=catalog, method='kde')
+            density = get_sigma_mu(mu_ra1, mu_dec1, catalog=catalog, method='sklearn_kde')
 
     # No proper motion error included
     if delta_mu_ra_err == 0.0 or delta_mu_dec_err == 0.0:

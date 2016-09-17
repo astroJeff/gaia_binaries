@@ -4,6 +4,7 @@ from numpy.random import uniform
 from scipy.optimize import newton
 from scipy import stats
 from scipy.stats import gaussian_kde
+from sklearn.neighbors import KernelDensity
 import corner
 
 # Project modules
@@ -278,7 +279,7 @@ def calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc):
 
 
 
-def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde'):
+def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_method='sklearn'):
     """ This function calculates the probability of a
     random star having the observed proper motion
 
@@ -290,6 +291,8 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde'):
         Transverse velocity difference between two stars
     method : string
         Method to perform 2D interpolation (options:kde)
+    kde_method : string
+        Which KDE algorithm to use (options: scipy, sklearn)
 
     Returns
     -------
@@ -304,48 +307,59 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde'):
     if binary_set is None:
         generate_binary_set(num_sys=num_sys)
 
-    # if sim_binaries is None and binary_set is None:
-    #     print "No included set of simulated binaries."
-    #     print "Generating " + str(num_sys) + " binaries now..."
-    #
-    #     binary_set = np.zeros(num_sys, dtype=[('theta', 'f8'),('delta_mu','f8')])
-    #     # Helper function
-    #     def pm_at_dist(pm, dist=100.0):
-    #         return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
-    #
-    #     # Create random binaries
-    #     M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
-    #     # Get random projected separations, velocities
-    #     proj_sep, pm = calc_theta_pm(M1, M2, a, e, M, Omega, omega, inc)
-    #
-    #     binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
-    #     binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
-    #
-    #     # Save binaries for later
-    #     sim_binaries = binary_set
-    #
-    #     print "... Finished generating binaries"
-
-
     if method is 'kde':
         # Use a Gaussian KDE
         global binary_kde
-        if binary_kde is None: binary_kde = gaussian_kde((binary_set["proj_sep"], binary_set["delta_v_trans"]))
+        #if binary_kde is None: binary_kde = gaussian_kde((binary_set["proj_sep"], binary_set["delta_v_trans"]))
+        # We work in log space for the set of binaries
+
+        if kde_method is not 'sklearn' and kde_method is not 'scipy':
+            print "Must use a valid kde algorithm: options are 'sklearn' and 'scipy'"
+            print "NOTE: sklean's KDE is the Lotus to scipy's 3-cylinder Pinto"
+            return
+
+
+        if binary_kde is None:
+            if kde_method is 'sklearn':
+                kwargs = {'kernel':'tophat'}
+                binary_kde = KernelDensity(bandwidth=0.1, **kwargs)
+                binary_kde.fit( np.array([np.log10(binary_set['proj_sep']), np.log10(binary_set['delta_v_trans'])]).T )
+            else:
+                binary_kde = gaussian_kde((np.log10(binary_set["proj_sep"]), np.log10(binary_set["delta_v_trans"])))
 
 
         if isinstance(delta_v_trans, np.ndarray) and isinstance(proj_sep, np.ndarray):
-            values = np.vstack([proj_sep, delta_v_trans])
-            prob_binary = binary_kde.evaluate(values)
+
+            if kde_method is 'sklearn':
+                values = np.array([np.log10(proj_sep), np.log10(delta_v_trans)]).T
+                prob_binary = np.exp(binary_kde.score_samples(values))
+            else:
+                values = np.array([np.log10(proj_sep), np.log10(delta_v_trans)])
+                prob_binary = binary_kde.evaluate(values)
+
+
         elif isinstance(delta_v_trans, np.ndarray):
-            values = np.vstack([proj_sep*np.ones(len(delta_v_trans)), delta_v_trans])
-            prob_binary = binary_kde.evaluate(values)
+
+            if kde_method is 'sklearn':
+                values = np.array([np.log10(proj_sep)*np.ones(len(delta_v_trans)), np.log10(delta_v_trans)]).T
+                prob_binary = np.exp(binary_kde.score_samples(values))
+            else:
+                values = np.array([np.log10(proj_sep)*np.ones(len(delta_v_trans)), np.log10(delta_v_trans)])
+                prob_binary = binary_kde.evaluate(values)
+
         else:
-            prob_binary = binary_kde.evaluate([proj_sep, delta_v_trans])
+            if kde_method is 'sklearn':
+                prob_binary = np.exp(binary_kde.score_samples([np.log10(proj_sep), np.log10(delta_v_trans)]))
+            else:
+                prob_binary = binary_kde.evaluate([np.log10(proj_sep), np.log10(delta_v_trans)])
 
     else:
         print "You must input an appropriate method."
         print "Options: 'kde' only"
         return
+
+    # Convert back from log-space to linear-space
+    prob_binary = prob_binary / proj_sep / delta_v_trans
 
     return prob_binary
 

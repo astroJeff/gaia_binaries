@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import normal, multivariate_normal
-from scipy.stats import norm
+from scipy.stats import norm, truncnorm
 import P_binary
 import P_random
 import parallax
@@ -40,17 +40,17 @@ def match_binaries(t, subsample=None):
     # Generate simulated binaries
     print "Generating binaries..."
     # NOTE: Computation time scales roughly with num_sys here:
-    P_binary.generate_binary_set(num_sys=10000)
+    P_binary.generate_binary_set(num_sys=100000)
 
 
     # Generate random alignment KDEs using first entry as a test position
     P_random.mu_kde = None
     P_random.pos_kde = None
     pos_density = P_random.get_sigma_pos(t['ra'][0], t['dec'][0], catalog=t, method='kde')
-    pm_density = P_random.get_sigma_mu(t['mu_ra'][0], t['mu_dec'][0], catalog=t, method='kde')
+    pm_density = P_random.get_sigma_mu(t['mu_ra'][0:1], t['mu_dec'][0:1], catalog=t, method='sklearn_kde')
 
     # Generate parallax KDE for parallax prior
-    parallax.set_plx_kde(t)
+    parallax.set_plx_kde(t, bandwidth=0.01)
 
     # Now, let's calculate the probabilities
     length = len(t)
@@ -171,9 +171,15 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
                                               size=size_integrate_full)
     delta_mu_sample = np.sqrt(delta_mu_ra_sample**2 + delta_mu_dec_sample**2)
 
+
     # Generate random parallaxes from uncertainties in primary star
-    plx_sample = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], \
-                                              size=size_integrate_full)
+    # plx_sample = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], \
+    #                                           size=size_integrate_full)
+
+    # Use a truncated normal distribution so we don't get negative parallaxes
+    a, b = - t['plx'][id1] / t['plx_err'][id1], 10.0
+    plx_sample = truncnorm.rvs(a, b, loc=t['plx'][id1], scale=t['plx_err'][id1], size=size_integrate_full)
+
 
     # Distance in pc is just parallax in asec
     dist_sample = 1.0e3 / plx_sample  # convert from mas to asec
@@ -211,7 +217,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     ####################### Random Alignment Likelihood #########################
     # Random Alignment densities
     pos_density = P_random.get_sigma_pos(t['ra'][id1], t['dec'][id1], catalog=t, method='kde')
-    pm_density = P_random.get_sigma_mu(t['mu_ra'][id1], t['mu_dec'][id1], catalog=t, method='kde')
+    pm_density, tmp = P_random.get_sigma_mu(t['mu_ra'][id1]*np.ones(2), t['mu_dec'][id1]*np.ones(2), catalog=t, method='sklearn_kde')
 
 
     # Calculate random alignment probabilities
