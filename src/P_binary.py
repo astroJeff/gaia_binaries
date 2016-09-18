@@ -42,7 +42,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e2, a_high=1.0e7, num_sys=1):
+def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -358,8 +358,9 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
         print "Options: 'kde' only"
         return
 
-    # Convert back from log-space to linear-space
-    prob_binary = prob_binary / proj_sep / delta_v_trans
+    # Convert back from log10-space to linear-space
+    # the log(10) terms convert from log10 to ln
+    prob_binary = prob_binary / (proj_sep*np.log(10.)) / (delta_v_trans*np.log(10.))
 
     return prob_binary
 

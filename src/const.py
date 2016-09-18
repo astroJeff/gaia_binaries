@@ -12,4 +12,4 @@ rad_to_deg = 57.2957795131 # Radians to degrees
 
 f_bin = 0.5                       # binary fraction
 
-kde_subset = True
+kde_subset = False

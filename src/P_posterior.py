@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.random import normal, multivariate_normal
 from scipy.stats import norm, truncnorm
+from functools import reduce
 import P_binary
 import P_random
 import parallax
@@ -13,7 +14,7 @@ import time
 
 size_integrate = 10          # Number of samples for delta mu integration for initial search
 size_integrate_full = 1000   # Number of samples for delta mu integration for possible matches
-size_integrate_plx = 10      # Number of samples for parallax integration for random
+size_integrate_plx = 1000      # Number of samples for parallax integration for random
 
 
 def match_binaries(t, subsample=None):
@@ -74,11 +75,14 @@ def match_binaries(t, subsample=None):
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
-        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
+#        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
+        ids_good = reduce(np.intersect1d,
+                          (i_star2[np.where(theta < 2.0)[0]],
+                           i_star2[np.where(delta_plx < 5.0*delta_plx_err)[0]],
+                           i_star2[np.where(theta != 0.0)[0]]))
 
         # Move on if no matches within 1 degree
         if len(ids_good) == 0: continue
-
 
 
         # Select random delta mu's for Monte Carlo integration over observational uncertainties
@@ -94,13 +98,18 @@ def match_binaries(t, subsample=None):
 
 
         # Identify potential matches as ones with non-zero P(binary)
-        mu_diff_vector = np.amax(np.vstack([mu_diff_3sigma, 0.1*np.ones(len(ids_good))]), axis=0)
+#        mu_diff_vector = np.amax(np.vstack([mu_diff_3sigma, 0.1*np.ones(len(ids_good))]), axis=0)
+        mu_diff_vector = mu_diff_3sigma
+
         # dist in pc
         min_dist = 1.0e3 / np.amax(np.vstack([np.ones(len(ids_good)) * (t['plx'][i]+3.0*t['plx_err'][i]), t['plx'][ids_good]+3.0*t['plx_err'][ids_good]]), axis=0)
         # projected separation in pc
         proj_sep_vector = (theta_good*np.pi/180.0) * min_dist * (c.pc_to_cm / c.Rsun_to_cm)
         # Transverse velocity vector in km/s
         delta_v_trans_vector = (mu_diff_vector/1.0e3/3600.0*np.pi/180.0) * min_dist * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
+        # So we don't have negative delta_v_trans_vectors
+        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, 0.1*np.ones(len(ids_good))]), axis=0)
+
         ids_good_binary = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
 
         # If no matches, move on
@@ -155,7 +164,6 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     ####################### Binary Likelihood #########################
     # Angular separation
     theta = P_random.get_theta_proj_degree(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2])
-
 
     # Proper motion uncertainties
     delta_mu_ra_err = np.sqrt(t['mu_ra_err'][id1]**2 + t['mu_ra_err'][id2]**2)
@@ -213,7 +221,6 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     prob_binary = 1.0/float(size_integrate_full) * np.sum(prob_tmp * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
 
 
-
     ####################### Random Alignment Likelihood #########################
     # Random Alignment densities
     pos_density = P_random.get_sigma_pos(t['ra'][id1], t['dec'][id1], catalog=t, method='kde')
@@ -230,8 +237,12 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
 
     # Now, need to compute parallax integrals
     # Monte Carlo these - random draws from Gaussian, evaluate parallax prior for random draws
-    plx_sample_1 = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], size=size_integrate_plx)
-    plx_sample_2 = normal(loc=t['plx'][id2], scale=t['plx_err'][id2], size=size_integrate_plx)
+    a, b = - t['plx'][id1] / t['plx_err'][id1], 10.0
+    plx_sample_1 = truncnorm.rvs(a, b, loc=t['plx'][id1], scale=t['plx_err'][id1], size=size_integrate_plx)
+#    plx_sample_1 = normal(loc=t['plx'][id1], scale=t['plx_err'][id1], size=size_integrate_plx)
+    a, b = - t['plx'][id2] / t['plx_err'][id2], 10.0
+    plx_sample_2 = truncnorm.rvs(a, b, loc=t['plx'][id2], scale=t['plx_err'][id2], size=size_integrate_plx)
+#    plx_sample_2 = normal(loc=t['plx'][id2], scale=t['plx_err'][id2], size=size_integrate_plx)
     prob_plx_1 = 1.0/float(size_integrate_plx) * np.sum(parallax.get_plx_prior(plx_sample_1))
     prob_plx_2 = 1.0/float(size_integrate_plx) * np.sum(parallax.get_plx_prior(plx_sample_2))
 
