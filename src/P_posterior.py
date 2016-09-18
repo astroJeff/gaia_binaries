@@ -13,12 +13,7 @@ import matplotlib.pyplot as plt
 
 
 
-size_integrate = 10          # Number of samples for delta mu integration for initial search
-size_integrate_full = 1000   # Number of samples for delta mu integration for possible matches
-size_integrate_plx = 1000      # Number of samples for parallax integration for random
-
-
-def match_binaries(t, sys_start=0, subsample=None):
+def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, size_integrate_plx=10000):
     """ Function to match binaries within a catalog
 
     Arguments
@@ -28,7 +23,11 @@ def match_binaries(t, sys_start=0, subsample=None):
     sys_start : int (optional)
         Skip the first sys_start number of systems before beginning matching
     subsample : int (optional)
-        if provided, program ends after only searching for matches to subset of this size
+        If provided, program ends after only searching for matches to subset of this size
+    size_integrate_full : int (optional)
+        If provided, the number of random draws for integration over delta mu
+    size_integrate_plx : int (optional)
+        If provided, the number of random draws for integration over parallax
 
     Returns
     -------
@@ -58,7 +57,9 @@ def match_binaries(t, sys_start=0, subsample=None):
     parallax.set_plx_kde(t, bandwidth=0.01)
 
     # Set normalization constant for C1 prior
-    P_random.set_prior_normalization(t)
+    print "Calculating normalization for random alignment prior..."
+    if P_random.C1_prior_norm is None: P_random.set_prior_normalization(t)
+    print "Done setting prior."
 
     # Now, let's calculate the probabilities
     length = len(t)
@@ -141,7 +142,9 @@ def match_binaries(t, sys_start=0, subsample=None):
 
 
             # Calculate the posterior probability
-            prob_posterior, prob_random, prob_binary = calc_P_posterior(star1, star2, pos_density, pm_density, i, j, t)
+            prob_posterior, prob_random, prob_binary = calc_P_posterior(star1, star2, pos_density, pm_density, i, j, t,
+                                                                        size_integrate_full=size_integrate_full,
+                                                                        size_integrate_plx=size_integrate_plx)
 
 
 
@@ -164,7 +167,7 @@ def match_binaries(t, sys_start=0, subsample=None):
     return prob_out
 
 
-def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
+def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_integrate_full=1000, size_integrate_plx=1000):
 
 
     ####################### Binary Likelihood #########################

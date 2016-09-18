@@ -398,7 +398,7 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
     return P_mu
 
 
-def set_prior_normalization(catalog):
+def set_prior_normalization(catalog, num_sys=100000):
     """ This function calculates the normalization constant for the
     prior on random alignments by Monte Carlo integrating the stellar
     density squared over the whole sky
@@ -407,6 +407,8 @@ def set_prior_normalization(catalog):
     ----------
     catalog : ndarray
         The stellar catalog over which we are integrating
+    num_sys : int
+        Number of random points for integration
 
     Returns
     -------
@@ -415,11 +417,7 @@ def set_prior_normalization(catalog):
 
     global C1_prior_norm
 
-    if C1_prior_norm is not None: return
-
-    print "Calculating random alignment prior normalization..."
-
-    num_sys = 100000
+    #if C1_prior_norm is not None: return
 
     # Monte Carlo select random positions
     ran_theta = np.arccos(1.0-2.0*np.random.uniform(size = num_sys))
@@ -434,7 +432,6 @@ def set_prior_normalization(catalog):
 
     C1_prior_norm = 1.0/(2.0 * np.mean(sigma_pos_2) * c.deg_in_sky)
 
-    print "Done calculating normalization for prior."
 
 def get_prior_random_alignment(ra, dec, t, sigma_pos=None):
     """ Calculate the prior on C1
