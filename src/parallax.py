@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 from astroML.density_estimation import bayesian_blocks
 from sklearn.neighbors import KernelDensity
+import const as c
 
 plx_kde = None
 plx_hist_blocks = None
