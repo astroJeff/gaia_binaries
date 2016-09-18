@@ -165,7 +165,17 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidt
                 pos_kde = KernelDensity(**kwargs)
             else:
                 pos_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
-            pos_kde.fit( np.array([catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']]).T )
+
+
+            if c.kde_subset:
+                # Select a subset of catalog for the KDE
+                ra_ran = np.copy(catalog['ra'])
+                dec_ran = np.copy(catalog['dec'])
+                np.random.shuffle(ra_ran)
+                np.random.shuffle(dec_ran)
+                pos_kde.fit( np.array([ra_ran[0:100000] * np.cos(dec_ran[0:100000]*np.pi/180.0), dec_ran[0:100000]]).T )
+            else:
+                pos_kde.fit( np.array([catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']]).T )
 
         values = np.array([ra*np.cos(dec*np.pi/180.0), dec]).T
         sigma_star = np.exp(pos_kde.score_samples(values))
@@ -276,12 +286,22 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
     elif method is 'sklearn_kde':
         # Use the sklearn KDE algorithm
         if mu_kde is None:
+
             kwargs = {'kernel':'tophat'}
             if bandwidth is None:
                 mu_kde = KernelDensity(**kwargs)
             else:
                 mu_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
-            mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
+
+            if c.kde_subset:
+                # Select a subset of catalog for the KDE
+                mu_ra_ran = np.copy(catalog['mu_ra'])
+                mu_dec_ran = np.copy(catalog['mu_dec'])
+                np.random.shuffle(mu_ra_ran)
+                np.random.shuffle(mu_dec_ran)
+                mu_kde.fit( np.array([mu_ra_ran[0:100000], mu_dec_ran[0:100000]]).T )
+            else:
+                mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
 
         values = np.array([mu_ra, mu_dec]).T
         sigma_mu = np.exp(mu_kde.score_samples(values))

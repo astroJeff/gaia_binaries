@@ -7,7 +7,7 @@ plx_hist_blocks = None
 plx_bins_blocks = None
 
 
-def set_plx_kde(t, bandwidth=None, method='kde'):
+def set_plx_kde(t, bandwidth=None, method='sklearn_kde'):
     """ Set the plx_kde
 
     Parameters
@@ -17,18 +17,30 @@ def set_plx_kde(t, bandwidth=None, method='kde'):
     bandwidth : float
         Bandwidth for gaussian_kde (optional, 0.01 recommended)
     method : string
-        Method for density determination (options: kde, blocks)
+        Method for density determination (options: scipy_kde, sklearn_kde, blocks)
     """
 
+    global plx_kde
 
-    if method is 'kde':
-        global plx_kde
+    if method is 'scipy_kde':
+
         if plx_kde is None:
             # We are only going to allow parallaxes above some minimum value
             if bandwidth is None:
                 plx_kde = gaussian_kde(t['plx'][t['plx']>0.0])
             else:
                 plx_kde = gaussian_kde(t['plx'][t['plx']>0.0], bw_method=bandwidth)
+
+    elif method is 'sklearn_kde':
+        if plx_kde is None:
+            kwargs = {'kernel':'tophat'}
+            if bandwidth is None:
+                plx_kde = KernelDensity(**kwargs)
+            else:
+                plx_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
+
+            plx_kde.fit( np.array([t['plx'][t['plx']>0.0]]) )
+
     elif method is 'blocks':
         global plx_bins_blocks
         global plx_hist_blocks
@@ -51,7 +63,7 @@ def set_plx_kde(t, bandwidth=None, method='kde'):
         return
 
 
-def get_plx_prior(plx, method='kde'):
+def get_plx_prior(plx, method='sklearn_kde'):
     """ Obtain the parallax priors from the KDE
 
     Parameters
@@ -59,7 +71,7 @@ def get_plx_prior(plx, method='kde'):
     plx : float
         Parallax to get the prior for (units: mas)
     method : string
-        Method for density determination (options: kde, blocks)
+        Method for density determination (options: scipy_kde, sklearn_kde, blocks)
 
     Returns
     -------
@@ -67,15 +79,20 @@ def get_plx_prior(plx, method='kde'):
         Prior probability for astrometric parallax
     """
 
-    if method is 'kde':
-        global plx_kde
-        if plx_kde is None:
-            print "You must set the parallax KDE first"
-            return
+    global plx_kde
 
+    # Check that parallax KDE is set already
+    if plx_kde is None and (method is 'scipy_kde' or method is 'sklearn_kde'):
+        print "You must set the parallax KDE first"
+        return
+
+    if method is 'scipy_kde':
         return plx_kde.evaluate((plx))
 
-    if method is 'blocks':
+    elif method is 'sklearn_kde':
+        return np.exp(plx_kde.score_samples(plx))
+
+    elif method is 'blocks':
         global plx_bins_blocks
         global plx_hist_blocks
 
