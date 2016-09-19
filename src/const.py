@@ -8,6 +8,7 @@ AU_to_cm = 1.496e13               # AU to cm
 pc_to_cm = 3.086e18               # pc to cm
 deg_to_rad = 0.0174532925199 # Degrees to radians
 rad_to_deg = 57.2957795131 # Radians to degrees
+deg_in_sky = 41253.               # Square degrees in the sky
 
 
 f_bin = 0.5                       # binary fraction

@@ -12,7 +12,8 @@ dtype = [('ID','<i8'),('tyc','S11'),('hip','<i8'),('ra','<f8'),('dec','<f8'),('m
 
 tgas_full = np.array([], dtype=dtype)
 
-for i in np.arange(16):
+#for i in np.arange(16):
+for i in np.arange(1):
     if i < 10:
         filename = ('../data/TGAS/TgasSource_000-000-00' + str(i) + '.csv')
     else:
@@ -42,6 +43,7 @@ for i in np.arange(16):
     tgas_full = np.append(tgas_full, tgas)
 
 
-prob_out = P_posterior.match_binaries(tgas_full, subsample=10000)
+prob_out = P_posterior.match_binaries(tgas_full, sys_start=50000, subsample=1000)
+
 
 pickle.dump(prob_out, open('../data/TGAS/prob_out.p', 'wb'))

@@ -9,6 +9,7 @@ import const as c
 from astropy.table import Table
 import pickle
 import time
+import matplotlib.pyplot as plt
 
 
 
@@ -17,13 +18,15 @@ size_integrate_full = 1000   # Number of samples for delta mu integration for po
 size_integrate_plx = 1000      # Number of samples for parallax integration for random
 
 
-def match_binaries(t, subsample=None):
+def match_binaries(t, sys_start=0, subsample=None):
     """ Function to match binaries within a catalog
 
     Arguments
     ---------
     t : ndarray
         Catalog for self-compare for matching
+    sys_start : int (optional)
+        Skip the first sys_start number of systems before beginning matching
     subsample : int (optional)
         if provided, program ends after only searching for matches to subset of this size
 
@@ -41,17 +44,21 @@ def match_binaries(t, subsample=None):
     # Generate simulated binaries
     print "Generating binaries..."
     # NOTE: Computation time scales roughly with num_sys here:
-    P_binary.generate_binary_set(num_sys=100000)
+    P_binary.generate_binary_set(num_sys=10000)
+    print "Done generating binaries"
 
 
     # Generate random alignment KDEs using first entry as a test position
     P_random.mu_kde = None
     P_random.pos_kde = None
-    pos_density = P_random.get_sigma_pos(t['ra'][0], t['dec'][0], catalog=t, method='kde')
+    pos_density = P_random.get_sigma_pos(t['ra'][0:1], t['dec'][0:1], catalog=t, method='sklearn_kde')
     pm_density = P_random.get_sigma_mu(t['mu_ra'][0:1], t['mu_dec'][0:1], catalog=t, method='sklearn_kde')
 
     # Generate parallax KDE for parallax prior
     parallax.set_plx_kde(t, bandwidth=0.01)
+
+    # Set normalization constant for C1 prior
+    P_random.set_prior_normalization(t)
 
     # Now, let's calculate the probabilities
     length = len(t)
@@ -64,9 +71,11 @@ def match_binaries(t, subsample=None):
 
     for i in np.arange(length):
 
-        if i%1000 == 0: print i, time.time()-start
+        #if i%1000 == 0: print i, time.time()-start
 
-        if subsample is not None and i == subsample:
+        # So we can start at any point in the catalog
+        if i < sys_start: continue
+        if subsample is not None and i == subsample+sys_start:
             break
 
 
@@ -77,13 +86,12 @@ def match_binaries(t, subsample=None):
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
 #        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
         ids_good = reduce(np.intersect1d,
-                          (i_star2[np.where(theta < 2.0)[0]],
+                          (i_star2[np.where(theta < 1.0)[0]],
                            i_star2[np.where(delta_plx < 5.0*delta_plx_err)[0]],
                            i_star2[np.where(theta != 0.0)[0]]))
 
         # Move on if no matches within 1 degree
         if len(ids_good) == 0: continue
-
 
         # Select random delta mu's for Monte Carlo integration over observational uncertainties
         theta_good = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][ids_good], t['dec'][ids_good])
@@ -126,6 +134,7 @@ def match_binaries(t, subsample=None):
             # IDs for the secondary
             j = ids_good_binary_all[k]
 
+
             # Star arrays
             star1 = t['ra'][i], t['dec'][i], t['mu_ra'][i], t['mu_dec'][i], t['mu_ra_err'][i], t['mu_dec_err'][i]
             star2 = t['ra'][j], t['dec'][j], t['mu_ra'][j], t['mu_dec'][j], t['mu_ra_err'][j], t['mu_dec_err'][j]
@@ -135,13 +144,10 @@ def match_binaries(t, subsample=None):
             prob_posterior, prob_random, prob_binary = calc_P_posterior(star1, star2, pos_density, pm_density, i, j, t)
 
 
-            # # Output to stdout non-zero probabilities
-            # print i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior
-
 
             # Select potential matches
             # if prob_posterior > 0.5:
-            if prob_posterior > 1.0e-2:
+            if prob_posterior > 0.0:
                 prob_temp = np.zeros(1, dtype=dtype)
                 theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][j], t['dec'][j])
                 prob_temp[0] = i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior, \
@@ -200,9 +206,9 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
 
     # Jacobians for transforming from angular to physical units
     # Units: [(km/s) / (mas/yr)]
-    jacob_dV_dmu = (1.0e3/plx_sample) * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
+    jacob_dV_dmu = dist_sample * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
     # Units: [(Rsun) / (deg.)]
-    jacob_ds_dtheta = (1.0e3/plx_sample) * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
+    jacob_ds_dtheta = dist_sample * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
 
 
     # Find binary probabilities
@@ -223,7 +229,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
 
     ####################### Random Alignment Likelihood #########################
     # Random Alignment densities
-    pos_density = P_random.get_sigma_pos(t['ra'][id1], t['dec'][id1], catalog=t, method='kde')
+    pos_density, tmp = P_random.get_sigma_pos(t['ra'][id1]*np.ones(2), t['dec'][id1]*np.ones(2), catalog=t, method='sklearn_kde')
     pm_density, tmp = P_random.get_sigma_mu(t['mu_ra'][id1]*np.ones(2), t['mu_dec'][id1]*np.ones(2), catalog=t, method='sklearn_kde')
 
 
@@ -249,7 +255,12 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t):
     prob_parallax = prob_plx_1 * prob_plx_2
     prob_random = prob_random * prob_parallax
 
+    # C1_prior
+    C1_prior = P_random.get_prior_random_alignment(t['ra'][id1], t['dec'][id1], t, sigma_pos=pos_density)
+    C2_prior = P_binary.get_prior_binary(t['ra'][id1], t['dec'][id1], t, sigma_pos=pos_density)
 
     ####################### Posterior Probability #########################
     # Save those pairs with posterior probabilities above 50%
-    return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary), prob_random, prob_binary
+    # return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary), prob_random, prob_binary
+    prob_posterior = C2_prior * prob_binary / (C1_prior * prob_random + C2_prior * prob_binary)
+    return prob_posterior, prob_random, prob_binary

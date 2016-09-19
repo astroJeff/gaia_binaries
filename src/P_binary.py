@@ -9,7 +9,7 @@ import corner
 
 # Project modules
 import const as c
-
+import P_random
 
 binary_set = None
 binary_kde = None
@@ -400,6 +400,32 @@ def generate_binary_set(num_sys=100000):
     binary_set['delta_v_trans'] = delta_v_trans
 
     return
+
+
+def get_prior_binary(ra, dec, t, sigma_pos=None):
+    """ This function calculates the binary prior
+
+    Parameters
+    ----------
+    ra, dec : float
+        Stellar position
+    t : ndarray
+        The stellar catalog over which we are integrating
+    sigma_pos : float
+        local position density (optional)
+
+    Returns
+    -------
+    C2_prior : float
+        Binary prior
+
+    """
+
+    if sigma_pos is None: sigma_pos = P_random.get_sigma_pos(ra, dec, catalog=t)
+
+    C2_prior = sigma_pos * len(t) * c.f_bin
+
+    return C2_prior
 
 
 def create_plot_binary(dist=100.0, num_sys=100, bins=25):

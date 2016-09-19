@@ -7,6 +7,7 @@ import const as c
 
 mu_kde = None
 pos_kde = None
+C1_prior_norm = None
 
 def deg_to_rad(theta):
     """ Convert from degrees to radians """
@@ -108,7 +109,7 @@ def nstars_nearby(ra, dec, radius=1.0, catalog=None):
     return len(np.where(dist<radius)[0])
 
 
-def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
+def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidth=None):
     """ This function calculates the local stellar density
 
     Parameters
@@ -120,13 +121,17 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
     rad : float
         Search radius; empirical only (degrees)
     method : string
-        Density determination method (options: kde, empirical)
+        Density determination method (options: scipy_kde, sklearn_kde, empirical)
+    bandwidth : float
+        Bandwidth for the sklearn_kde (optional)
 
     Returns
     -------
     sigma_star : float
         Local density of stars per square degree
     """
+
+    global pos_kde
 
     # Catalog check
     if catalog is None:
@@ -135,9 +140,8 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
     if method is 'empirical':
         # Estimate number density of stars from number of systems within 5 degrees
         sigma_star = (nstars_nearby(ra, dec, radius=rad, catalog=catalog)-1) / (4.0*np.pi* rad**2)
-    elif method is 'kde':
+    elif method is 'scipy_kde':
         # Use a Gaussian KDE
-        global pos_kde
         if pos_kde is None:
 
             if c.kde_subset:
@@ -152,10 +156,24 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='kde'):
             else:
                 pos_kde = gaussian_kde((catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']))
 
-        sigma_star = pos_kde.evaluate((ra, dec))
+        sigma_star = pos_kde.evaluate((ra*np.cos(dec*np.pi/180.0), dec))
+    elif method is 'sklearn_kde':
+
+        if pos_kde is None:
+            kwargs = {'kernel':'tophat'}
+            if bandwidth is None:
+                pos_kde = KernelDensity(**kwargs)
+            else:
+                pos_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
+            pos_kde.fit( np.array([catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']]).T )
+
+        values = np.array([ra*np.cos(dec*np.pi/180.0), dec]).T
+        sigma_star = np.exp(pos_kde.score_samples(values))
+
+
     else:
         print "You must provide a valid method"
-        print "Options: 'kde', 'empirical'"
+        print "Options: 'scipy_kde', 'sklearn_kde', or 'empirical'"
         return
 
     return sigma_star
@@ -358,6 +376,73 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
         P_mu = (1.0/nsamples) * np.sum(2.0*np.pi*delta_mu * density)
 
     return P_mu
+
+
+def set_prior_normalization(catalog):
+    """ This function calculates the normalization constant for the
+    prior on random alignments by Monte Carlo integrating the stellar
+    density squared over the whole sky
+
+    Parameters
+    ----------
+    catalog : ndarray
+        The stellar catalog over which we are integrating
+
+    Returns
+    -------
+
+    """
+
+    global C1_prior_norm
+
+    if C1_prior_norm is not None: return
+
+    print "Calculating random alignment prior normalization..."
+
+    num_sys = 100000
+
+    # Monte Carlo select random positions
+    ran_theta = np.arccos(1.0-2.0*np.random.uniform(size = num_sys))
+    ran_phi = 2.0 * np.pi * np.random.uniform(size = num_sys)
+
+    ran_dec = (ran_theta-np.pi/2.0) * 180.0/np.pi
+    ran_ra = ran_phi * 180.0/np.pi
+
+    # Calculate sigma^2
+    sigma_pos = get_sigma_pos(ran_ra, ran_dec, catalog=catalog)
+    sigma_pos_2 = sigma_pos**2
+
+    C1_prior_norm = 1.0/(2.0 * np.mean(sigma_pos_2) * c.deg_in_sky)
+
+    print "Done calculating normalization for prior."
+
+def get_prior_random_alignment(ra, dec, t, sigma_pos=None):
+    """ Calculate the prior on C1
+
+    Parameters
+    ----------
+    ra, dec : float
+        Stellar position
+    t : ndarray
+        The stellar catalog over which we are integrating
+    sigma_pos : float
+        local position density (optional)
+
+    Returns
+    -------
+    C1_prior
+
+    """
+
+    global C1_prior_norm
+
+    if C1_prior_norm is not None: set_prior_normalization(t)
+
+    if sigma_pos is None: sigma_pos = get_sigma_pos(ra, dec, catalog=t)
+
+    C1_prior = C1_prior_norm * sigma_pos**2 * len(t)**2
+
+    return C1_prior
 
 
 def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec2,
