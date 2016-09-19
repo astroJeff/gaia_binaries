@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.stats import gaussian_kde
 from astroML.density_estimation import bayesian_blocks
+from sklearn.neighbors import KernelDensity
 
 plx_kde = None
 plx_hist_blocks = None
@@ -39,7 +40,12 @@ def set_plx_kde(t, bandwidth=None, method='sklearn_kde'):
             else:
                 plx_kde = KernelDensity(bandwidth=bandwidth, **kwargs)
 
-            plx_kde.fit( np.array([t['plx'][t['plx']>0.0]]) )
+            if c.kde_subset:
+                plx_ran = np.copy(t['plx'][t['plx']>0.0])
+                np.random.shuffle(plx_ran)
+                plx_kde.fit( plx_ran[:, np.newaxis] )
+            else:
+                plx_kde.fit( t['plx'][t['plx']>0.0][:, np.newaxis] )
 
     elif method is 'blocks':
         global plx_bins_blocks
@@ -90,7 +96,7 @@ def get_plx_prior(plx, method='sklearn_kde'):
         return plx_kde.evaluate((plx))
 
     elif method is 'sklearn_kde':
-        return np.exp(plx_kde.score_samples(plx))
+        return np.exp(plx_kde.score_samples(plx[:, np.newaxis]))
 
     elif method is 'blocks':
         global plx_bins_blocks

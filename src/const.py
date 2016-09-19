@@ -13,4 +13,5 @@ deg_in_sky = 41253.               # Square degrees in the sky
 
 f_bin = 0.5                       # binary fraction
 
-kde_subset = False
+kde_subset = true
+
