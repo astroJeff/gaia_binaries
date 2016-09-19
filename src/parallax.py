@@ -9,7 +9,7 @@ plx_hist_blocks = None
 plx_bins_blocks = None
 
 
-def set_plx_kde(t, bandwidth=None, method='sklearn_kde'):
+def set_plx_kde(t, bandwidth=0.3, method='sklearn_kde'):
     """ Set the plx_kde
 
     Parameters
@@ -44,7 +44,7 @@ def set_plx_kde(t, bandwidth=None, method='sklearn_kde'):
             if c.kde_subset:
                 plx_ran = np.copy(t['plx'][t['plx']>0.0])
                 np.random.shuffle(plx_ran)
-                plx_kde.fit( plx_ran[:, np.newaxis] )
+                plx_kde.fit( plx_ran[0:5000, np.newaxis] )
             else:
                 plx_kde.fit( t['plx'][t['plx']>0.0][:, np.newaxis] )
 

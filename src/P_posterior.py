@@ -36,9 +36,6 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
 
     """
 
-    # Start time
-    start = time.time()
-
 
     # Generate simulated binaries
     print "Generating binaries..."
@@ -60,6 +57,9 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
     print "Calculating normalization for random alignment prior..."
     if P_random.C1_prior_norm is None: P_random.set_prior_normalization(t)
     print "Done setting prior."
+
+    # Start time
+    start = time.time()
 
     # Now, let's calculate the probabilities
     length = len(t)
@@ -216,6 +216,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_in
 
     # Find binary probabilities
     prob_tmp = P_binary.get_P_binary(proj_sep, delta_v_trans)
+    if np.all(prob_tmp == 0.0): return 0.0, 1.0, 0.0
 
     # Now, let's add probabilities for second star's parallax to match
     prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])

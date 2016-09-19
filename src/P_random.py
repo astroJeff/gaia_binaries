@@ -398,7 +398,7 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
     return P_mu
 
 
-def set_prior_normalization(catalog, num_sys=100000):
+def set_prior_normalization(catalog, num_sys=1000000):
     """ This function calculates the normalization constant for the
     prior on random alignments by Monte Carlo integrating the stellar
     density squared over the whole sky
