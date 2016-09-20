@@ -42,7 +42,18 @@ for i in np.arange(16):
     tgas_full = np.append(tgas_full, tgas)
 
 
-prob_out = P_posterior.match_binaries(tgas_full, sys_start=50000, subsample=1000)
 
 
-pickle.dump(prob_out, open('../data/TGAS/prob_out.p', 'wb'))
+if len(sys.argv) > 3:
+    sys_start = int(sys.argv[1])
+    subsample = int(sys.argv[2])
+else:
+    sys_start = 0
+    subsample = 1000   
+
+
+prob_out = P_posterior.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample, size_integrate_full=100000, size_integrate_plx=100000)
+
+
+pickle.dump(prob_out, open(sys.argv[3], 'wb'))
+#pickle.dump(prob_out, open('../data/TGAS/prob_out.p', 'wb'))
