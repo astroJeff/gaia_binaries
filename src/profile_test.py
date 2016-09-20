@@ -12,7 +12,7 @@ dtype = [('ID','<i8'),('tyc','S11'),('hip','<i8'),('ra','<f8'),('dec','<f8'),('m
 
 tgas_full = np.array([], dtype=dtype)
 
-for i in np.arange(1):
+for i in np.arange(16):
     if i < 10:
         filename = ('../data/TGAS/TgasSource_000-000-00' + str(i) + '.csv')
     else:

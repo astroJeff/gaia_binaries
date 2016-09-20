@@ -112,6 +112,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
 
         # dist in pc
         min_dist = 1.0e3 / np.amax(np.vstack([np.ones(len(ids_good)) * (t['plx'][i]+3.0*t['plx_err'][i]), t['plx'][ids_good]+3.0*t['plx_err'][ids_good]]), axis=0)
+        min_dist[min_dist<0.0] = 1.0e10
         # projected separation in pc
         proj_sep_vector = (theta_good*np.pi/180.0) * min_dist * (c.pc_to_cm / c.Rsun_to_cm)
         # Transverse velocity vector in km/s
