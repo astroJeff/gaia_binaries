@@ -402,17 +402,21 @@ def generate_binary_set(num_sys=100000):
     return
 
 
-def get_prior_binary(ra, dec, t, sigma_pos=None):
+def get_prior_binary(ra, dec, mu_ra, mu_dec, t, sigma_pos=None, sigma_mu=None):
     """ This function calculates the binary prior
 
     Parameters
     ----------
     ra, dec : float
         Stellar position
+    mu_ra, mu_dec : float
+        Stellar proper motions
     t : ndarray
         The stellar catalog over which we are integrating
     sigma_pos : float
         local position density (optional)
+    sigma_mu : float
+        local proper motion density (optional)
 
     Returns
     -------
@@ -422,8 +426,9 @@ def get_prior_binary(ra, dec, t, sigma_pos=None):
     """
 
     if sigma_pos is None: sigma_pos = P_random.get_sigma_pos(ra, dec, catalog=t)
+    if sigma_mu is None: sigma_mu = P_random.get_sigma_mu(mu_ra, mu_dec, catalog=t)
 
-    C2_prior = sigma_pos * len(t) * c.f_bin
+    C2_prior = sigma_pos * sigma_mu * len(t) * c.f_bin
 
     return C2_prior
 

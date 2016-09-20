@@ -237,6 +237,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_in
     pos_density, tmp = P_random.get_sigma_pos(t['ra'][id1]*np.ones(2), t['dec'][id1]*np.ones(2), catalog=t, method='sklearn_kde')
     pm_density, tmp = P_random.get_sigma_mu(t['mu_ra'][id1]*np.ones(2), t['mu_dec'][id1]*np.ones(2), catalog=t, method='sklearn_kde')
 
+    if pm_density == 0.0: return 1.0, 0.0, prob_binary
 
     # Calculate random alignment probabilities
     prob_random, prob_pos, prob_mu = P_random.get_P_random_alignment(star1[0], star1[1], star2[0], star2[1],
@@ -261,11 +262,16 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_in
     prob_random = prob_random * prob_parallax
 
     # C1_prior
-    C1_prior = P_random.get_prior_random_alignment(t['ra'][id1], t['dec'][id1], t, sigma_pos=pos_density)
-    C2_prior = P_binary.get_prior_binary(t['ra'][id1], t['dec'][id1], t, sigma_pos=pos_density)
+    C1_prior = P_random.get_prior_random_alignment(t['ra'][id1], t['dec'][id1], t['mu_ra'][id1], t['mu_ra'][id1], \
+                                                   t, sigma_pos=pos_density, sigma_mu=pm_density)
+    C2_prior = P_binary.get_prior_binary(t['ra'][id1], t['dec'][id1], t['mu_ra'][id1], t['mu_ra'][id1], \
+                                                   t, sigma_pos=pos_density, sigma_mu=pm_density)
 
     ####################### Posterior Probability #########################
     # Save those pairs with posterior probabilities above 50%
     # return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary), prob_random, prob_binary
+
+    print pos_density, pm_density, P_random.C1_prior_norm, C1_prior, C2_prior, prob_binary, prob_random
+
     prob_posterior = C2_prior * prob_binary / (C1_prior * prob_random + C2_prior * prob_binary)
     return prob_posterior, prob_random, prob_binary

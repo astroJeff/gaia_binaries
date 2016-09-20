@@ -299,7 +299,8 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
                 mu_dec_ran = np.copy(catalog['mu_dec'])
                 np.random.shuffle(mu_ra_ran)
                 np.random.shuffle(mu_dec_ran)
-                mu_kde.fit( np.array([mu_ra_ran[0:100000], mu_dec_ran[0:100000]]).T )
+                mu_kde.fit( np.array([mu_ra_ran[0:10000], mu_dec_ran[0:10000]]).T )
+                # mu_kde.fit( np.array([mu_ra_ran, mu_dec_ran]).T )
             else:
                 mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
 
@@ -422,28 +423,40 @@ def set_prior_normalization(catalog, num_sys=1000000):
     # Monte Carlo select random positions
     ran_theta = np.arccos(1.0-2.0*np.random.uniform(size = num_sys))
     ran_phi = 2.0 * np.pi * np.random.uniform(size = num_sys)
-
     ran_dec = (ran_theta-np.pi/2.0) * 180.0/np.pi
     ran_ra = ran_phi * 180.0/np.pi
+
+    # Monte Carlo select random proper motions between (-500,+500)
+    scale = 500.0
+    ran_mu_ra = scale * np.random.uniform(size = num_sys) - scale/2.0
+    ran_mu_dec = scale * np.random.uniform(size = num_sys) - scale/2.0
+
 
     # Calculate sigma^2
     sigma_pos = get_sigma_pos(ran_ra, ran_dec, catalog=catalog)
     sigma_pos_2 = sigma_pos**2
+    sigma_mu = get_sigma_mu(ran_mu_ra, ran_mu_dec, catalog=catalog)
+    sigma_mu_2 = sigma_mu**2
 
-    C1_prior_norm = 1.0/(2.0 * np.mean(sigma_pos_2) * c.deg_in_sky)
+#    C1_prior_norm = 1.0/(2.0 * np.mean(sigma_pos_2) * c.deg_in_sky)
+    C1_prior_norm = 1.0/(2.0 * np.mean(sigma_pos_2) * c.deg_in_sky * np.mean(sigma_mu_2) * scale**2)
 
 
-def get_prior_random_alignment(ra, dec, t, sigma_pos=None):
+def get_prior_random_alignment(ra, dec, mu_ra, mu_dec, t, sigma_pos=None, sigma_mu=None):
     """ Calculate the prior on C1
 
     Parameters
     ----------
     ra, dec : float
         Stellar position
+    mu_ra, mu_dec : float
+        Stellar proper motions
     t : ndarray
         The stellar catalog over which we are integrating
     sigma_pos : float
         local position density (optional)
+    sigma_mu : float
+        local proper motion density (optional)
 
     Returns
     -------
@@ -456,8 +469,9 @@ def get_prior_random_alignment(ra, dec, t, sigma_pos=None):
     if C1_prior_norm is not None: set_prior_normalization(t)
 
     if sigma_pos is None: sigma_pos = get_sigma_pos(ra, dec, catalog=t)
+    if sigma_mu is None: sigma_mu = get_sigma_mu(mu_ra, mu_dec, catalog=t)
 
-    C1_prior = C1_prior_norm * sigma_pos**2 * len(t)**2
+    C1_prior = C1_prior_norm * sigma_pos**2 * sigma_mu**2 * len(t)**2
 
     return C1_prior
 
