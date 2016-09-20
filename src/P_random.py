@@ -299,8 +299,8 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
                 mu_dec_ran = np.copy(catalog['mu_dec'])
                 np.random.shuffle(mu_ra_ran)
                 np.random.shuffle(mu_dec_ran)
-                mu_kde.fit( np.array([mu_ra_ran[0:10000], mu_dec_ran[0:10000]]).T )
-                # mu_kde.fit( np.array([mu_ra_ran, mu_dec_ran]).T )
+                # mu_kde.fit( np.array([mu_ra_ran[0:10000], mu_dec_ran[0:10000]]).T )
+                mu_kde.fit( np.array([mu_ra_ran, mu_dec_ran]).T )
             else:
                 mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
 
