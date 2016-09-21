@@ -14,7 +14,7 @@ import pickle
 
 # Read in sample from Tycho-2 table
 filename = ('../data/hipparchos/hip2.dat')
-readme = ('../data/hipparchos/Readme')
+readme = ('../data/hipparchos/ReadMe')
 hip_orig = Table.read(filename, format='cds', guess=False, readme=readme)
 
 
