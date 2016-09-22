@@ -271,7 +271,7 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_in
     # Save those pairs with posterior probabilities above 50%
     # return c.f_bin * prob_binary / (prob_random + c.f_bin * prob_binary), prob_random, prob_binary
 
-    print pos_density, pm_density, P_random.C1_prior_norm, C1_prior, C2_prior, prob_binary, prob_random
+    # print pos_density, pm_density, P_random.C1_prior_norm, C1_prior, C2_prior, prob_binary, prob_random
 
     prob_posterior = C2_prior * prob_binary / (C1_prior * prob_random + C2_prior * prob_binary)
     return prob_posterior, prob_random, prob_binary
