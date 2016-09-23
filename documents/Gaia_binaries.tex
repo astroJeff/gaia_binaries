@@ -70,6 +70,41 @@ In this work, we describe a statistical method for identifying wide binaries usi
 Previously, \citet{shaya11} outlined a method similar to the one here to identify wide binaries in the {\it Hipparcos} catalog. Our method here differs from and improves upon theirs in a number of important ways, which makes our method more suitable to {\it Gaia} catalogs. {\bf Outline their method in a sentence or two.}
 
 
+
+
+\subsection{Motivation \& Challenges}
+\label{sec:motivation}
+
+Gaia will ultimately astrometrically measure some 10$^9$ binaries, an increase of four orders of magnitude over Hipparchos. At the same time, the astrometric precision will increase by an order of magnitude. The sheer scale and precision of the data set means that identifying wide binaries in Gaia presents a unique data science challenge.
+
+
+Hipparcos provides the only comparable data set to the currently available Gaia data set. This contains some 10$^5$ stars. However the number of stellar pairs of a catalog of size $N$ is the arithmetic mean $N(N-1)/2$, and therefore there are $\sim5\times10^9$ individual pairs of stars in the Hipparcos data set. While the TGAS catalog is 20 times larger, the total number of stellar pairs is increased to $2\times10^{12}$, a factor of 500 increase over Hipparcos. The final Gaia catalog will contain some $5\times10^{17}$ stellar pairs; clearly the same algorithms developed to search previous astrometric catalogs, even those developed to include parallax for Hipparcos, need to be rethought. The sheer scale of the problem is formidable.
+
+
+Furthermore, the astrometric precision of Gaia presents its own unique problems for identifying wide binaries. Traditional methods have worked toward identifying pairs of close stars with identical proper motions; however, Gaia's astrometric precision is fine enough that matching stars with identical proper motions will miss a large portion of true binaries. We demonstrate this effect by generating a set of 10$^4$ random binaries. We draw random binary separations, $a$, from a distribution flat in log space and eccentricities, $e$, from a thermal distribution:
+\begin{eqnarray}
+P(a) \propto a^{-1} &;& a \in [10^4 R_{\odot}:10^6 R_{\odot}] \\
+P(e) \propto e\ \ \ &;& e \in [0:1).
+\end{eqnarray}
+We further adopt random binary orientation angles to determine the distribution of the projected separation, $s$, and projected difference in orbital velocities, $\Delta V$. 
+
+Figure \ref{fig:gaia_binary_limits} compares the distribution of binaries in $\log s-\log \Delta V$ space to Gaia's astrometric limits. The current TGAS data release can identify pairs of stars with angular separations of $\approx1$\asec and proper motions of $\approx 1.3 $ mas yr$^{-1}$. We show these regions in the top panel for three different distances; Gaia can detect the differential orbital motion for binaries within the boxed regions. By the final Gaia data release, the astrometry will become substantially more precise; on-ground processing may allow identification of stellar pairs with separations as small as 0.1\asec \citep{harrison11}, and proper motion precision may reach precisions of $\approx0.25$ mas yr$^{-1}$. For most of the wide binaries within 100 pc, and a substantial fraction within 500 pc, this differential proper motion must be taken into account.
+
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.95\columnwidth]{../figures/Gaia_s_dV_limits.pdf}
+\caption{ The KDE representation of the density of 10$^4$ randomly produced binaries in $\log s- \log(\Delta V)$ space. A population of binaries with separations nearing 1 pc exist, but these should have identical proper motions. At somewhat smaller projected separations, the tangential velocities may differ by as much as tens of km s$^{-1}$. The top panel shows the approximate current sensitivity of Gaia of 1.3 mas yr$^{-1}$ in proper motion and 1\asec in angular separation for three different distances. Binaries within the boxed regions can be detected, but the difference in their tangential velocity can be detected by Gaia. Differential velocities due to orbital motion can be ignored for binaries below the boxed regions. The bottom panel shows that by the final Gaia data release, differential proper motions should be detectable for a much larger parameter space. }
+\label{fig:gaia_binary_limits}
+\end{center}
+\end{figure}
+
+While demonstrating a clear challenge to wide binary identification methods, Figure \ref{fig:gaia_binary_limits} also shows one of the primary motivations for going through the exercise: {\it most binaries exist at large separations}. Such binaries have separations far too large to observe orbital motion, and the only currently robust method to associate wide pairs involves matching their position in phase space. Previous surveys were constrained to only those nearby pairs with large proper motions. With Gaia's proper motion precision and parallaxes, we now have the ideal data set to access this region of binary parameter space. 
+
+
+Finally, Gaia presents an additional, unprecedented opportunity to access all six dimensions of phase space. Its final radial velocity catalog will achieve precision of $\sim 10$ km s$^{-1}$, precise enough to substantially aide in separating genuine stellar binaries from randomly aligned stellar pairs. To our knowledge, radial velocities have exclusively been used in the past to check the binarity of wide binary candidates; no algorithms have yet been included within common proper motion pair searches. For the first time, large numbers of binaries will be able to be identified and confirmed by their full three-dimensional positions and velocities. Orbital motion will not be needed to claim binarity with certainty.
+
+
 \section{Statistical Method}
 
 
@@ -82,8 +117,10 @@ Previously, \citet{shaya11} outlined a method similar to the one here to identif
 \end{figure}
 
 
-Figure \ref{fig:tycho-2_pos_mu} shows the position distribution (top panel) and proper motion distribution (bottom panel) of stars in the Tycho-2 catalog. The density of stars clearly varies depending on position and proper motion. It should be therefore be obvious that the probability of any two stars forming by a random alignment of two unassociated stars depends strongly on its position in phase space. At the same time, binary evolution theory provides loose expectations for the distribution of binaries we should expect. The goal in this section is to quantify the probabilities that any particular pair of stars is produced by both a random alignment and a true binary. Combining these probabilities gives us the Bayesian posterior probability that any pair of stars is a true binary. 
+Figure \ref{fig:tycho-2_pos_mu} shows the position distribution (top panel) and proper motion distribution (bottom panel) of stars in the Tycho-2 catalog. The density of stars clearly varies depending on position and proper motion. It should be therefore be obvious that the probability of any two stars forming by a random alignment of two unassociated stars depends strongly on its position in phase space. At the same time, binary evolution theory provides loose expectations for the distribution of binaries we should expect. The goal in this section is to quantify the probabilities that any particular pair of stars is produced by both a random alignment and a true binary. Combining these probabilities gives us the Bayesian posterior probability that any pair of stars is a true binary. As the next three subsections are somewhat technical, readers may wish to skip to Section \ref{sec:demonstrations} for a demonstration of our method.
 
+
+\subsection{Constructing the Bayesian Formalism}
 
 
 We consider any particular pair of stars occupying similar positions in five dimensional phase space ($\alpha$, $\delta$, $\mu_{\alpha}$, $\mu_{\delta}$, and $\pi$) to be formed from one of two classes, either a random alignment ($C_1$) or a genuine binary ($C_2$). This probability will, in general, depend on all five parameters (e.g., random alignments are more likely in dense stellar regions with low proper motions). To account for variations in this probability, we first assume that we are only interested in stellar pairs with close enough positions in phase space such that there is no difference in the average stellar density in the vicinity each star. This allows us to separate the two sets of astrometric parameters (one for each star) into $\vec{x}_j$, the pair's position in four-dimensional phase space, and $\vec{x}_i$, the difference in astrometric parameters between the two stars:
@@ -122,22 +159,34 @@ P(\vec{x}_i \given \vec{x}_j) = \sum_{k=1,2} P(\vec{x}_i \given C_k, \vec{x}_j) 
 \end{equation}
 
 
-If we assume the binary fraction ($f_{\rm bin}$) is a constant, we can express the conditional prior probabilities for $C_1$ and $C_2$ in terms of $P(\vec{x}_j)$, the density of stars as a function of phase space position $\vec{x}_j$:
+We can determine the prior probabilities, $P(C_1 \given \vec{x}_j)$ and $P(C_2 \given \vec{x}_j)$, based on our understanding of binaries and random alignments: $P(C_1 \given \vec{x}_j)$ should scale with $\rho^2(\vec{x}_j)$ while $P(C_2 \given \vec{x}_j)$ should scale with $\rho(\vec{x}_j)$:
 \begin{eqnarray}
-P(C_2 \given \vec{x}_j) &=& P(\vec{x}_j) f_{\rm bin} \\
-P(C_1 \given \vec{x}_j) &=& P(\vec{x}_j).
+P(C_1 \given \vec{x}_j) &=& A_1\ \rho^2(\vec{x}_j) \\
+P(C_2 \given \vec{x}_j) &=& A_2\ \rho(\vec{x}_j).
 \end{eqnarray}
+We can determine the coefficients of these proportionalities by integrating the relations over all four dimensions of $\vec{x}_j$ which will provide us with the total number of random alignments in the sample, $N(N-1)/2$, and the total number of binaries in the sample (including unresolved pairs), $f_{\rm bin} N$, where $f_{\rm bin}$ is the binary fraction:
+\begin{eqnarray}
+\frac{N(N-1)}{2} &=& \int \dd \vec{x}_j\ A_1\ \rho^2(\vec{x}_j) \\
+N f_{\rm bin} &=& \int \dd \vec{x}_j\ A_2\ \rho(\vec{x}_j).
+\end{eqnarray}
+The integral to determine $A_1$ must be calculated numerically for a specific sample, while $A_2$ immediately becomes $f_{\rm bin}$:
+\begin{eqnarray}
+A_1 &\approx& \frac{1}{\int \dd \vec{x}_j\ P(\vec{x}_j)^2} \\
+A_2 &=& f_{\rm bin},
+\end{eqnarray}
+where we have used the substitution that $\rho(\vec{x}_j) = N P(\vec{x}_j)$. We calculate the integral over $A_1$ using Monte Carlo random sampling over kernel density estimates of the distribution in position space and proper motion space. We describe these density estimators in detail in Section \ref{sec:random}.
 
-We can combine these with Equation \ref{eq:P_binary_1}, to get:
+
+We can now substitute the priors into Equation \ref{eq:P_binary_1} to obtain our posterior distribution:
 \begin{equation}
-P(C_2 \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin}  + P(\vec{x}_i \given C_1, \vec{x}_j) }. \label{eq:P_binary_2}
+P(C_2 \given \vec{x}_i, \vec{x}_j) = \frac{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin} }{P(\vec{x}_i \given C_2, \vec{x}_j) f_{\rm bin}  + P(\vec{x}_i \given C_1, \vec{x}_j) A_1 \rho(\vec{x}_j)  }. \label{eq:P_binary_2}
 \end{equation}
 
 
-%The density for any particular position in phase space $n(\vec{x}_j)$ can be determined empirically by smoothing the number of star counts observed in the Gaia - TYCHO-2 sample. This function needs to be determined and calibrated using the actual catalog data, but one can in principle train on the simulated data set.
 
 
 \subsection{Random Alignment Likelihood: $P(\vec{x}_i \given C_1, \vec{x}_j)$}
+\label{sec:random}
 
 The probability that a pair of stars with $\vec{x}_i$ and $\vec{x}_j$ could have been formed due to random alignments is $P(\vec{x}_i \given C_1, \vec{x}_j)$. We begin by marginalizing over the true individual parallaxes $\pi_1$ and $\pi_2$ and the true proper motion difference $\Delta \mu$ to account for observational uncertainties on these quantities:
 \begin{equation}
@@ -165,15 +214,15 @@ P(\vec{x}_i \given C_1, \vec{x}_j) &=& \int P(\theta \given C_1, \alpha, \delta)
 
 To determine the $\theta$ term in Equation \ref{eq:RA_factored}, we recognize that as $\theta$ increases, the probability of random alignments increases linearly. This scaling is because, for a uniformly dense population on the sky, consecutively larger annuli surrounding a star have areas that increase linearly, and the probability of random alignments should scale with the area (at least locally, so the density of stars per phase space is constant). The scaling coefficient depends on the local stellar density surrounding a point. We therefore determine this scaling empirically. 
 
-To do this, we calculate the kernel density estimate (KDE), using a Gaussian kernel, for the distribution of stars in the Gaia-Tycho-2 catalog. The KDE acts as a smoothing function over the distribution in Figure \ref{fig:tycho-2_pos_mu} and produces a normalized probability density function over position space. {\bf Does this need to be calculated on $\alpha \cos \delta$ and $\delta$, instead of $\alpha$ and $\delta$?}
+To do this, we calculate the kernel density estimate (KDE), using a Gaussian kernel, for the distribution of stars in $(\alpha \cos \delta, \delta)$-space in the Gaia-Tycho-2 catalog. The KDE acts as a smoothing function over the distribution in Figure \ref{fig:tycho-2_pos_mu} and produces a normalized probability density function over position space. 
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.95\columnwidth]{../figures/tycho-2_local_density.pdf}
-\caption{ For one particular star, the solid line in the top panel shows the normalized histogram of the distances to other stars in the Tycho-2 catalog. For a constant density (locally, at least) the distribution should rise linearly with angular separation. The dashed line shows the expectation from our KDE estimate using Equation \ref{eq:P_theta}. For the same star, the solid line in the bottom panel shows the equivalent normalized histogram of proper motion differences. For proper motion distributions beyond $\approx$10 mas yr$^{-1}$, the distribution substantially rises, deviating from linear. The dashed line again indicates our approximation using the KDE density estimate using Equation \ref{eq:P_mu}. Since typical proper motion uncertainties are $\lesssim$ 5 mas yr$^{-1}$, our linear approximation is reasonable. Distributions for other stars are similar to the ones shown here.}
-\label{fig:tycho-2_density}
-\end{center}
-\end{figure}
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.95\columnwidth]{../figures/tycho-2_local_density.pdf}
+%\caption{ For one particular star, the solid line in the top panel shows the normalized histogram of the distances to other stars in the Tycho-2 catalog. For a constant density (locally, at least) the distribution should rise linearly with angular separation. The dashed line shows the expectation from our KDE estimate using Equation \ref{eq:P_theta}. For the same star, the solid line in the bottom panel shows the equivalent normalized histogram of proper motion differences. For proper motion distributions beyond $\approx$10 mas yr$^{-1}$, the distribution substantially rises, deviating from linear. The dashed line again indicates our approximation using the KDE density estimate using Equation \ref{eq:P_mu}. Since typical proper motion uncertainties are $\lesssim$ 5 mas yr$^{-1}$, our linear approximation is reasonable. Distributions for other stars are similar to the ones shown here.}
+%\label{fig:tycho-2_density}
+%\end{center}
+%\end{figure}
 
 The top panel of Figure \ref{fig:tycho-2_density} demonstrates the typical accuracy of our empirically-derived estimate for the local space density. This figure shows the distribution for one particular star representative of typical accuracies for our estimation methods. The solid line indicates the normalized histogram of stars at a distance $\theta$, while the dashed line approximates this distribution using our KDE estimate. The dashed line is determined independently for each primary object by calling the KDE function to determine the stellar density, as a function of $\alpha$ and $\delta$:
 \begin{equation}
@@ -206,18 +255,6 @@ P(\pi'_2 \given \pi_2) &=& \mathcal{N}(\pi_2 \given \pi'_2, \sigma^2_{\pi_2}). \
 The random alignment likelihood, $P(\vec{x}_i \given C_1, \vec{x}_j)$ can now be determined by substituting  Equations \ref{eq:P_theta}, \ref{eq:P_mu}, \ref{eq:delta_mu_uncertainty}, \ref{eq:pi_1_uncertainty}, and \ref{eq:pi_2_uncertainty} into the marginalized and factored Equation \ref{eq:RA_factored}. We calculate these integrals using Monte Carlo sampling; our convergence tests indicate that 10$^3$ samples provide a sufficient accuracy for our purposes here.
 
 
-
-
-\begin{comment}
-The last two integrals in Equation \ref{eq:RA_factored} account for uncertainties in each of the astrometric parallax measurements. We assume that Lutz-Kelker bias \citep{lutz73} needs to be taken into account, therefore:
-\begin{equation}
-P(\pi) \propto \pi^4.
-\end{equation}
-Observational uncertainties on the parallax are assumed to be Gaussian:
-\begin{equation}
-P(\pi' \given \pi) = \mathcal{N}(\pi'; \pi, \sigma_{\pi}). 
-\end{equation}
-\end {comment}
 
 
 Equation \ref{eq:RA_factored}, with our empirical estimate based on the local stellar density for $P(\theta \given C_1, \alpha, \delta)$ and the KDE estimate for $P(\Delta \mu \given C_1, \alpha, \delta, \mu_{\alpha}, \mu_{\delta})$ then defined the likelihood for any particular pair of stars to be produced by random alignment.
@@ -294,12 +331,6 @@ P(\Delta \mu' \given \Delta \mu) &=& \mathcal{N}( \Delta \mu' \given \Delta \mu,
 
 The fourth term in Equation \ref{eq:P_binary_marginalized}, $P(s, \Delta V_{\rm pec} \given C_2)$, expresses the likelihood that a random binary would produce the observed projected separation and velocity difference. In general, this function depends on assumptions made about populations of binary stars; we assume a binary is completely determined by four parameters: the two stellar masses, $M_1$ and $M_2$, the orbital separation, $a$, and the eccentricity, $e$. We do not include any binary evolution interactions between the two stars. 
 
-We draw random binary separations, $a$, from a distribution flat in log space and eccentricities, $e$, from a thermal distribution:
-\begin{eqnarray}
-P(a) \propto a^{-1} &;& a \in [10^4 R_{\odot}:10^6 R_{\odot}] \\
-P(e) \propto e\ \ \ &;& e \in [0:1).
-\end{eqnarray}
-We further adopt random binary orientation angles to determine the distribution of the projected difference in orbital motions. We adopt prior distributions for these parameters. 
 
 We determine the density of true binaries in $s-\Delta V$ space by randomly generating 10$^6$ binaries from the above distributions, with random orientation angles. Figure \ref{fig:P_binary} demonstrates the distribution of our randomly generated binaries in this space. The bottom and left axes indicate $s$ and $\Delta V$, respectively, while the top and right axes indicate $\theta$ and $\Delta \mu$, respectively, if the entire population were at a distance of 100 pc. Gaia, with its ability to discern between double stars with subarcsecond separations and its proper motion precision of $\sim$ 1 mas yr$^{-1}$ for the joint Gaia-Tycho-2 catalog, can indeed detect differences in the orbital motion of the components of these widely separated binaries.
 
@@ -307,13 +338,6 @@ We determine the density of true binaries in $s-\Delta V$ space by randomly gene
 From the population of binaries shown in Figure \ref{fig:P_binary}, we use a KDE with a Gaussian kernel to create a normalized probability density function in this space. Evaluating the KDE at a particular $s$ and $\Delta V$ provides $P(s, \Delta V_{\rm pec} \given C_2)$.
 
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.95\columnwidth]{../figures/theta_mu.pdf}
-\caption{ The distribution of 10$^6$ simulated binaries in peculiar velocity vs.\ projected physical separation space. Typical spatial velocities are $\sim$km s$^{-1}$, corresponding to $\sim$mas yr$^{-1}$ at 100 pc. {\it Gaia} has a proper motion precision that can measure the difference between the two stars in a wide binary.  }
-\label{fig:P_binary}
-\end{center}
-\end{figure}
 
 The final term in Equation \ref{eq:P_binary_marginalized} is the Lenz-Kelker bias on the parallax measure. Equation \ref{eq:P_binary_marginalized} can then become:
 \begin{eqnarray}
@@ -329,6 +353,20 @@ We solve these integrals simultaneously using Monte Carlo random sampling. Conve
 
 
 
+\section{Demonstrating the Method}
+
+
+
+\begin{figure*}
+\begin{center}
+\includegraphics[width=0.95\textwidth]{../figures/Examples_s_dV.pdf}
+\caption{We compare the position in $\log s-\log \Delta V$ space of two pairs of stars from the TGAS catalog (black contours) to the expectation of a population of binary stars generated by the method described in Section \ref{sec:motivation} (blue background). The top panel shows a stellar pair identified by our method as a true binary, while the bottom panel shows a stellar pair rejected by our method. The contours, representing 1$-\sigma$, 2$-\sigma$, and 3$-\sigma$ confidence levels are created by accounting for uncertainties in the parallax and proper motions of the stars in each pair. Contours from the pair in the top panel overlap with the region of parameter space expected from genuine binaries, while contours in the bottom panel are clearly disparate. }
+\label{fig:example_s_dV}
+\end{center}
+\end{figure*}
+
+
+
 
 
 \section{Application to the Revised NLTT Catalog} \label{sec:rNLTT}
@@ -336,14 +374,6 @@ We solve these integrals simultaneously using Monte Carlo random sampling. Conve
 
 To test our method, we apply this method to the revised NLTT (rNLTT) catalog \citep{gould03, salim03}, containing 36,085 entries with a typical proper motion uncertainty of several mas yr$^{-1}$. A comparison of the pairs we identify to the 999 wide binaries previously identified by \citet[][hereafter CG04]{chaname04} in the rNLTT catalog provides a test of our method. The comparison is imperfect, since the rNLTT sample lacks the parallax measurements within the Gaia-Tycho-2 catalog. To apply our method to this sample, we assume all stars in the sample are at a distance of 100 pc, yet as we will see below, despite such a clearly incorrect assumption, our method remains effective.
 
-
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.95\columnwidth]{../figures/rNLTT_pos_mu.pdf}
-\caption{The top panel shows the distribution of rNLTT stars in right ascension and declination, while the bottom panel shows the distribution in proper motion. The donut shape in the proper motion distribution is due to the proper motion selection criteria for the NLTT catalog: by definition, stars in the NLTT catalog have a nominal proper motion of at least 200 mas yr$^{-1}$. This sample is clearly the tail of the proper motion distribution of all nearby, bright stars.}
-\label{fig:rNLTT_pos_mu}
-\end{center}
-\end{figure}
 
 
 
@@ -377,23 +407,23 @@ Through their search algorithm, they find 1147 candidate pairs in the rNLTT cata
 
 
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.95\columnwidth]{../figures/rNLTT_CG04_pos_mu.pdf}
-\caption{ The top panel compares the $\theta$ and $\Delta \mu$ distribution expected from a set of wide binaries in blue contours (at 100 pc) with wide binaries identified by CG04. Pairs that we find have $P(C_2 \given \vec{x}_i, \vec{x}_j) > 50\%$ (filled, black circles) typically have smaller $\theta$ and $\Delta \mu$, while pairs which our method rejects (open, red circles) are found at larger separations and proper motion differences. The bottom panel indicates those pairs identified by our method that were undetected by CG04. Uncertainties on $\Delta \mu$ are typically $\approx$10 mas yr$^{-1}$. }
-\label{fig:rNLTT_theta_mu}
-\end{center}
-\end{figure}
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.95\columnwidth]{../figures/rNLTT_CG04_pos_mu.pdf}
+%\caption{ The top panel compares the $\theta$ and $\Delta \mu$ distribution expected from a set of wide binaries in blue contours (at 100 pc) with wide binaries identified by CG04. Pairs that we find have $P(C_2 \given \vec{x}_i, \vec{x}_j) > 50\%$ (filled, black circles) typically have smaller $\theta$ and $\Delta \mu$, while pairs which our method rejects (open, red circles) are found at larger separations and proper motion differences. The bottom panel indicates those pairs identified by our method that were undetected by CG04. Uncertainties on $\Delta \mu$ are typically $\approx$10 mas yr$^{-1}$. }
+%\label{fig:rNLTT_theta_mu}
+%\end{center}
+%\end{figure}
 
 
 
-\begin{figure*}
-\begin{center}
-\includegraphics[width=0.95\textwidth]{../figures/rNLTT_probs.pdf}
-\caption{ The left-most panel shows the distribution of posterior probabilities for the pairs we detect (solid line) as well as the pairs in the CG04 catalog that are identified and accepted (dotted line) and identified and rejected (dashed line). Our method typically accepts or rejects pairs of stars with very high likelihood; there are relatively few pairs with posterior probabilities not close to either zero or unity. The middle and right panels show distributions for the same samples of binary likelihoods and random alignment likelihoods, respectively. Although there is a substantial overlap of 620 re-detected pairs, our model identifies an additional sample of 564 binaries missed by CG04 with lower random alignment likelihoods and higher binary likelihoods on average. }
-\label{fig:NLTT_probs}
-\end{center}
-\end{figure*}
+%\begin{figure*}
+%\begin{center}
+%\includegraphics[width=0.95\textwidth]{../figures/rNLTT_probs.pdf}
+%\caption{ The left-most panel shows the distribution of posterior probabilities for the pairs we detect (solid line) as well as the pairs in the CG04 catalog that are identified and accepted (dotted line) and identified and rejected (dashed line). Our method typically accepts or rejects pairs of stars with very high likelihood; there are relatively few pairs with posterior probabilities not close to either zero or unity. The middle and right panels show distributions for the same samples of binary likelihoods and random alignment likelihoods, respectively. Although there is a substantial overlap of 620 re-detected pairs, our model identifies an additional sample of 564 binaries missed by CG04 with lower random alignment likelihoods and higher binary likelihoods on average. }
+%\label{fig:NLTT_probs}
+%\end{center}
+%\end{figure*}
 
 
 
@@ -429,13 +459,13 @@ Gray points in each panel of Figure \ref{fig:NLTT_probabilities} show the distri
 
 Of the sample identified by CG04, we redetect 707 pairs ($\approx 70$\%) with a posterior probability greater than 50\%. Colored points in the four panels of Figure \ref{fig:NLTT_probabilities} compare the pairs in CG04 with all 946 pairs that we identify, indicated as gray points. The top left panel shows the disk binaries, the top right panel shows the binaries containing a WD, the bottom left panel shows the halo binaries, and the bottom right binary shows those binaries detected but ultimately rejected by CG04 for reasons provided in the legend. Differences between the two samples are substantial.  
 
-\begin{figure*}
-\begin{center}
-\includegraphics[width=0.95\textwidth]{../figures/rNLTT_P_binary_P_random.pdf}
-\caption{ {\bf Unclear if this is the best figure to use to compare our pairs with those in Chaname \& Gould (2004). It is clear there will be differences, so we should focus on what about those differences we want to highlight.} Likelihoods of stellar pairs being produced by a true binary and a random alignment. Gray points indicate the 949 pairs with posterior probabilities of being a true binary greater than 50\%. Colored points in the four panels indicate disk binaries (top left), WD binaries (top right), halo binaries (bottom left), and binaries identified but rejected by CG04 (bottom right). }
-\label{fig:NLTT_probabilities}
-\end{center}
-\end{figure*}
+%\begin{figure*}
+%\begin{center}
+%\includegraphics[width=0.95\textwidth]{../figures/rNLTT_P_binary_P_random.pdf}
+%\caption{ {\bf Unclear if this is the best figure to use to compare our pairs with those in Chaname \& Gould (2004). It is clear there will be differences, so we should focus on what about those differences we want to highlight.} Likelihoods of stellar pairs being produced by a true binary and a random alignment. Gray points indicate the 949 pairs with posterior probabilities of being a true binary greater than 50\%. Colored points in the four panels indicate disk binaries (top left), WD binaries (top right), halo binaries (bottom left), and binaries identified but rejected by CG04 (bottom right). }
+%\label{fig:NLTT_probabilities}
+%\end{center}
+%\end{figure*}
 
 \end{comment}
 
@@ -463,13 +493,13 @@ From the $2.5\times10^6$ stars in the catalog, we select those that have measure
  
  
  
-\begin{figure}
-\begin{center}
-\includegraphics[width=0.95\columnwidth]{../figures/tycho2_colors.pdf}
-\caption{ The color-magnitude distribution of a random subset of the Tycho-2 catalog. Vertical dashed lines (black) indicate colors roughly corresponding to the stellar types labeled at the bottom of the figure for Main Sequence stars. Since reddening is ignored, these are only approximate. Slanted dashed lines (red) indicate corresponding distances for Main Sequence stars. The bulk of the Main Sequence stars are at distances exceeding 100 pc.}
-\label{fig:tycho-2_color_mag}
-\end{center}
-\end{figure}
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=0.95\columnwidth]{../figures/tycho2_colors.pdf}
+%\caption{ The color-magnitude distribution of a random subset of the Tycho-2 catalog. Vertical dashed lines (black) indicate colors roughly corresponding to the stellar types labeled at the bottom of the figure for Main Sequence stars. Since reddening is ignored, these are only approximate. Slanted dashed lines (red) indicate corresponding distances for Main Sequence stars. The bulk of the Main Sequence stars are at distances exceeding 100 pc.}
+%\label{fig:tycho-2_color_mag}
+%\end{center}
+%\end{figure}
 
 
 
@@ -490,6 +520,7 @@ Nevertheless, from Figure \ref{fig:tycho-2_theta_mu} it is clear the systematics
 
 
 Figure 
+
 
 
 
