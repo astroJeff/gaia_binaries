@@ -15,7 +15,7 @@
 \newcommand{\asec}{\ifmmode {^{\prime\prime}}\else$^{\prime\prime}$\fi}
 \newcommand{\bs}[1]{\boldsymbol{#1}}
 \newcommand{\Msun}{\ifmmode {M_{\odot}}\else${M_{\odot}}$\fi}
-
+\newcommand{\Rsun}{\ifmmode {R_{\odot}}\else${R_{\odot}}$\fi}
 
 
 
@@ -33,14 +33,36 @@ $^3$ PUC}
 
 
 \begin{abstract}
-Abstract goes here. 
+We perform a search through the Tycho-2$-$Gaia astrometric catalog (TGAS) for wide stellar binaries by matching position, proper motion, and astrometric parallax. Our method to separate genuinely associated stellar pairs with randomly aligned, unassociated double stars uses a fully Bayesian formulation that accounts for uncertainties in both the proper motion and parallax. Furthermore, we design our method for scalability for expansion to future Gaia data sets which will be three orders of magnitude larger. After testing our method against previously identified sets of wide binaries, we apply it to the TGAS catalog and identify {\bf XXX} stellar binaries with a posterior probability greater than 90\%. Cross-matching the subset of these pairs also found in the RAVE radial velocity survey provides an estimate of the fidelity of our catalog; we find the vast majority of the candidate binaries in RAVE have consistent radial velocities indicating the effectiveness of our method. We identify several triple systems, as well as a number of nearby wide binaries. We confirm/reject the previous characterization of the visual stars {\bf XXX} as being in wide binaries.
 \end{abstract}
+
 
 \section{Introduction}
 
-There have been many efforts to search for wide binaries in the past. In the past, these have fallen under two categories depending on whether independent stars are matched using only position \citep{bahcall81, gould95, dhital15} or if proper motion is also included \citep{luyten79, wasserman91, dhital10}. The astrometric precision of Gaia will precisely measure astrometric parallax for some 10$^9$ stars, providing an unprecedented opportunity to identify wide binaries using five dimensions of phase space. Furthermore, by the final Gaia data release, its narrow-band spectrograph will obtain radial velocities for some subset of these stars allowing for a sample to be identified with fully six dimensions of phase space.
+Roughly half of all Main Sequence stars are found in binary systems with orbital separations extending from tens of \Rsun\ to $\sim$ pc. Unresolved binaries at the smallest separations are typically found by identifying radial velocity variations indicative of orbital motion, while binaries separated at larger separations can be identified by observing the star's motion through its orbit over periods of years. At the largest separations two stars are typically associated using by watching the stars move through the stellar neighborhood in the same direction and rate. These so-called common proper motion pairs have typical separations between 10$^2$ and 10$^5$ AU, a large fraction of all binary stars.
 
 
+Beyond $\sim10^3$ AU, binary system are unexpected to have any appreciable interaction throughout their lifetime {\bf cite Dylan's paper here}. At the same time, such binaries coeval since most formation scenarios indicate they must have been formed out of the dissolution of stellar clusters {\bf Citations from Julio here}. As coeval, independently-evolving stars, wide binaries are considered mini-clusters \citep{soderblom10}, allowing for a unique accessibility to answer questions unaddressable by other stellar systems.
+
+
+Wide binaries have been used extensively to calibrate stellar aging methods such as lithium depletion {\bf citations from Soderblom}, subdwarfs with MS pairs to calibrate stellar aging {\bf Julio's papers}, WDs with MS pairs to calibrate the IFMR {\bf Zhong and Oswalt}, and double white dwarfs to calibrate the IFMR \citep{finley97, andrews15}. At the widest separations, binaries are affected by interactions with other stars, giant molecular clouds, and the Galactic tide, each of which acts to stochastically disrupt the pair \citep{weinberg87, jiang10}. Characterizing the sample at the widest separations therefore has the potential to constrain underlying physics of the Milky Way's structure. Constraints made by wide binaries are typically limited by their statistics; identifying large numbers of wide binaries is difficult, and often such samples suffer from significant and hard-to-characterize observational biases.
+
+
+Previous efforts identifying wide binaries have focused on individual astrometric catalogs such as Luyten two tenths catalog \citep{luyten79}, {\bf list catalogs here} \citep{bahcall81, gould95, wasserman91}, the rNLTT catalog \citep{chaname04}, SDSS \citep{dhital10, dhital15, longhitano10, andrews12, baxter14, andrews15}, and Hipparcos \citep{shaya11}. These searches typically fall under two categories depending on whether independent stars are matched using only position or whether proper motion is included as well, corresponding to matching two or four dimensions, respectively, of the six-dimensional phase space. 
+
+
+\citep{shaya11} perform the first large-scale with the additional inclusion of astrometric parallax from Hipparcos astrometry. The additional phase space dimension adds a powerful constraint to separate genuine binaries from randomly aligned stellar pairs, however because of its non-linear dependence on distance and non-trivial prior probabilities, parallax adds a significant degree of complexity to matching stellar pairs. Nevertheless, using a Bayesian formalism, these authors identify hundreds of pairs including some with projected separations of $\sim$pc with high probability. Clearly the inclusion of parallax offers the opportunity to identify an astrophysical interesting set of wide binaries.
+
+
+The first data release from the Gaia satellite \citep{lindegren16} includes some 2.5 million stars in the TGAS catalog which matches objects detected by Gaia with objects in the Tycho-2 catalog \citep{hog00}. The catalog is nearly complete to $V=11$ mag, and includes stars out to and exceeding $V\approx$12 mag. Each of these stars has positions (with uncertainties of {\bf XXX} $\mu$asec), proper motions (with uncertainties $\approx$ 1.3 mas yr$^{-1}$), and parallaxes (with uncertainties $\approx 0.3$ mas). 
+
+
+In this work, we describe a statistical method for identifying wide binaries using position, proper motion, and astrometric parallax. Although our discussion is focused on identifying pairs within the TGAS catalog, our method is designed to be scalable for future Gaia data releases.
+
+
+%The astrometric precision of Gaia will precisely measure astrometric parallax for some 10$^9$ stars, providing an unprecedented opportunity to identify wide binaries using five dimensions of phase space. Furthermore, by the final Gaia data release, its narrow-band spectrograph will obtain radial velocities for some subset of these stars allowing for a sample to be identified with fully six dimensions of phase space.
+
+\begin{comment}
 Notes:
 \begin{itemize}
 \item NLTT catalog originally from \citet{luyten79}. Revised by \citet{gould03} and \citet{salim03}. The rNLTT catalog contains some 36,000 stars. 
@@ -58,16 +80,13 @@ The TDSC is composed of three different parts \citep{fabricius02}:
 \item Tycho-2 pairs with separations less than 10\asec. Only 359 of these existed
 \end{itemize}
 
-
-The Gaia-Tycho-2 combined dataset contains some 2.5 million stars. The dataset is nearly complete to $V\approx$11 magnitude, but includes stars out to and exceeding $V\approx$12 mag. These stars have a typical astrometric uncertainties of order 300 $\mu$as in position, 700 $\mu$as in parallax, and 1.5 mas yr$^{-1}$ in proper motion. 
-
+\end{comment}
 
 
+%The Gaia-Tycho-2 combined dataset contains some 2.5 million stars. The dataset is nearly complete to $V\approx$11 magnitude, but includes stars out to and exceeding $V\approx$12 mag. These stars have a typical astrometric uncertainties of order 300 $\mu$as in position, 700 $\mu$as in parallax, and 1.5 mas yr$^{-1}$ in proper motion. 
 
 
-In this work, we describe a statistical method for identifying wide binaries using position, proper motion, and astrometric parallax. Although our discussion is focused on identifying pairs within the joint Gaia-Tycho-2 catalog, our method is derived to be flexibly adapted to future Gaia data releases, as well as future astrometric catalogs.
-
-Previously, \citet{shaya11} outlined a method similar to the one here to identify wide binaries in the {\it Hipparcos} catalog. Our method here differs from and improves upon theirs in a number of important ways, which makes our method more suitable to {\it Gaia} catalogs. {\bf Outline their method in a sentence or two.}
+%Previously, \citet{shaya11} outlined a method similar to the one here to identify wide binaries in the {\it Hipparcos} catalog. Our method here differs from and improves upon theirs in a number of important ways, which makes our method more suitable to {\it Gaia} catalogs. {\bf Outline their method in a sentence or two.}
 
 
 
@@ -118,6 +137,32 @@ Finally, Gaia presents an additional, unprecedented opportunity to access all si
 
 
 Figure \ref{fig:tycho-2_pos_mu} shows the position distribution (top panel) and proper motion distribution (bottom panel) of stars in the Tycho-2 catalog. The density of stars clearly varies depending on position and proper motion. It should be therefore be obvious that the probability of any two stars forming by a random alignment of two unassociated stars depends strongly on its position in phase space. At the same time, binary evolution theory provides loose expectations for the distribution of binaries we should expect. The goal in this section is to quantify the probabilities that any particular pair of stars is produced by both a random alignment and a true binary. Combining these probabilities gives us the Bayesian posterior probability that any pair of stars is a true binary. As the next three subsections are somewhat technical, readers may wish to skip to Section \ref{sec:demonstrations} for a demonstration of our method.
+
+
+
+\subsection{Overview of the Method}
+
+
+Figure \ref{fig:example_s_dV} looks at two separate binaries analyzed by our method; the top panel shows a pair identified by our method as a true binary, while the bottom panel shows a pair that our method determines is a random alignment. The middle panels compare the astrometric parallaxes (based on their uncertainties) of the two stars in each pair as red and blue Gaussian curves, while the right panels show the corresponding proper motion uncertainties. Concentric circles indicate 1$-\sigma$, 2$-\sigma$, and 3$-\sigma$ regions. Although the system in the bottom panel clearly has a more inconsistent set of parallaxes and proper motions, they are still consistent at the $\approx$2$-\sigma$ level. 
+
+
+\begin{figure*}
+\begin{center}
+\includegraphics[width=0.95\textwidth]{../figures/Examples_s_dV.pdf}
+\caption{We compare the position in $\log s-\log \Delta V$ space of two pairs of stars from the TGAS catalog (black contours) to the expectation of a population of binary stars generated by the method described in Section \ref{sec:motivation} (blue background). The top panel shows a stellar pair identified by our method as a true binary, while the bottom panel shows a stellar pair rejected by our method. The contours, representing 1$-\sigma$, 2$-\sigma$, and 3$-\sigma$ confidence levels are created by accounting for uncertainties in the parallax and proper motions of the stars in each pair. Contours from the pair in the top panel overlap with the region of parameter space expected from genuine binaries, while contours in the bottom panel are clearly disparate. }
+\label{fig:example_s_dV}
+\end{center}
+\end{figure*}
+
+
+Our method separates genuine binaries from randomly aligned pairs by transforming from the pair's angular separation and each star's parallaxes and proper motions to projected physical separation and the difference in the transverse velocity. The distribution in these two parameters is indicated by the contours in the left-most panels. Contours again indicate 1$-\sigma$, 2$-\sigma$, and 3$-\sigma$ confidence levels. The blue background in these panels is the expected distribution of binaries described in \ref{sec:motivation}. The convolution of these two distributions, along with the Jacobian determinant term and parallax terms provided in Equation \ref{eq:P_binary} provides the probability that these pairs are consistent with being a true binary. 
+
+
+This is one part of the calculation in a Bayesian formalism; our method also needs to identify the probability that any particular pair is consistent with a random alignment of stars. 
+
+
+Finally, we need to calculate the prior probabilities of any particular pair being a genuine binary and a random alignment of stars. Since the number of stellar binaries in a sample scales with the size of the sample, $N$, while the number of randomly aligned pairs scales with $N(N-1)/2$, any particular pair has a very strong prior of being a randomly alignment. The exact value of this prior, which depends on the local density of each pair's position and proper motion, needs to be determined for every pair individually.
+
 
 
 \subsection{Constructing the Bayesian Formalism}
@@ -353,17 +398,6 @@ We solve these integrals simultaneously using Monte Carlo random sampling. Conve
 
 
 
-\section{Demonstrating the Method}
-
-
-
-\begin{figure*}
-\begin{center}
-\includegraphics[width=0.95\textwidth]{../figures/Examples_s_dV.pdf}
-\caption{We compare the position in $\log s-\log \Delta V$ space of two pairs of stars from the TGAS catalog (black contours) to the expectation of a population of binary stars generated by the method described in Section \ref{sec:motivation} (blue background). The top panel shows a stellar pair identified by our method as a true binary, while the bottom panel shows a stellar pair rejected by our method. The contours, representing 1$-\sigma$, 2$-\sigma$, and 3$-\sigma$ confidence levels are created by accounting for uncertainties in the parallax and proper motions of the stars in each pair. Contours from the pair in the top panel overlap with the region of parameter space expected from genuine binaries, while contours in the bottom panel are clearly disparate. }
-\label{fig:example_s_dV}
-\end{center}
-\end{figure*}
 
 
 
