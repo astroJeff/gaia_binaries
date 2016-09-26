@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from numpy.random import uniform
 from scipy.optimize import newton
 from scipy import stats
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, truncnorm
 from sklearn.neighbors import KernelDensity
 import corner
 
@@ -42,7 +42,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1):
+def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1, prob='log_flat'):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -51,22 +51,64 @@ def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1):
         Lower separation limit
     a_high : float
         Upper mass limit
-    num_sys : in
+    num_sys : int
         Number of systems to randomly Generate
+    prob : string
+        Probability distribution (options: 'log_flat', 'raghavan')
 
     Returns
     -------
     a : ndarray
         Random separations (ndarray)
     """
-    C_a = 1.0 / (np.log(a_high) - np.log(a_low))
-    tmp_y = uniform(size=num_sys)
 
-    return a_low*np.exp(tmp_y/C_a)
+    if prob == 'log_flat':
+        C_a = 1.0 / (np.log(a_high) - np.log(a_low))
+        tmp_y = uniform(size=num_sys)
+        return a_low*np.exp(tmp_y/C_a)
 
-def get_e(num_sys=1):
-    """ Return e from thermal distribution """
-    return np.sqrt(uniform(size=num_sys))
+    elif prob == 'raghavan':
+        mu_P_orb = 5.03
+        sigma_P_orb = 2.28
+        # Assume a system mass of 2 Msun
+        P_orb_low = np.log10(a_to_P(1.0, 1.0, a_low))
+        P_orb_high = np.log10(a_to_P(1.0, 1.0, a_high))
+        # Set limits for truncnorm
+        a, b = (P_orb_low - mu_P_orb) / sigma_P_orb, (P_orb_high - mu_P_orb) / sigma_P_orb
+        P_orb = 10.0**(truncnorm.rvs(a, b, loc=mu_P_orb, scale=sigma_P_orb, size=num_sys))
+        return P_to_a(1.0, 1.0, P_orb)
+
+    else:
+        print "You must provide a valid probability distribution"
+        print "Options are 'log_flat', 'raghavan'"
+        return
+
+
+
+def get_e(num_sys=1, prob='thermal'):
+    """ Return e from an input distribution
+
+    Parameters
+    ----------
+    num_sys : int
+        Number of systems
+
+    prob : string
+        Probability distribution (options: 'thermal', 'flat', 'circular', 'tokovinin')
+    """
+
+    if prob == 'thermal':
+        return np.sqrt(uniform(size=num_sys))
+    elif prob == 'flat':
+        return uniform(size=num_sys)
+    elif prob == 'circular':
+        return np.zeros(num_sys)
+    elif prob == 'tokovinin':  # From Tokovinin & Kiyaeva (2016), MNRAS 456
+        return (-1.0 + np.sqrt(1.0 + 15.0*uniform(size=num_sys))) / 3.0
+    else:
+        print "You must provide a valid probability distribution"
+        print "Options are 'thermal', 'flat', 'circular', or 'tokovinin'"
+        return
 
 # Random orbital orientation Parameters
 def get_M(num_sys=1):
@@ -85,13 +127,17 @@ def get_Omega(num_sys=1):
     """ Random longitudes of the ascending node """
     return 2.0*np.pi*uniform(size = num_sys)
 
-def create_binaries(num_sys=1):
+def create_binaries(num_sys=1, ecc_prob='thermal', a_prob='log_flat'):
     """ Wrapper to generate num_sys number of random binaries
 
     Parameters
     ----------
     num_sys : int
         Number of random binaries to generate
+    ecc_prob : string
+        Probability distribution to use for eccentricity (options in get_e function)
+    a_prob : string
+        Probability distrbution to use for orbital separation (options in get_a function)
 
     Returns
     -------
@@ -113,8 +159,8 @@ def create_binaries(num_sys=1):
 
     M1 = get_M1(num_sys=num_sys)
     M2 = get_M2(M1, num_sys=num_sys)
-    a = get_a(num_sys=num_sys)
-    e = get_e(num_sys=num_sys)
+    a = get_a(num_sys=num_sys, prob=a_prob)
+    e = get_e(num_sys=num_sys, prob=ecc_prob)
     M = get_M(num_sys=num_sys)
     omega = get_omega(num_sys=num_sys)
     Omega = get_Omega(num_sys=num_sys)
@@ -366,13 +412,18 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
 
 
 
-def generate_binary_set(num_sys=100000):
+def generate_binary_set(num_sys=100000, ecc_prob='thermal', a_prob='log_flat'):
     """ Create set of binaries to be saved to P_binary.binary_set
 
     Parameters
     ----------
     num_sys : int
         Number of random binaries to generate (default = 1000000)
+    ecc_prob : string
+        Probability distribution to use for eccentricity (options in get_e function)
+    a_prob : string
+        Probability distrbution to use for orbital separation (options in get_a function)
+
 
     Returns
     -------
@@ -382,19 +433,11 @@ def generate_binary_set(num_sys=100000):
     global binary_set
 
     # Create random binaries
-    M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys)
+    M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys, ecc_prob=ecc_prob, a_prob=a_prob)
     # Get random projected separations, velocities
     proj_sep, delta_v_trans = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
 
     binary_set = np.zeros(num_sys, dtype=[('proj_sep', 'f8'),('delta_v_trans','f8')])
-    # # Helper function
-    # def pm_at_dist(pm, dist=100.0):
-    #     return (pm * 1.0e5)/(dist * c.pc_to_cm) * (1.0e3 * 180.0 * 3600.0 / np.pi) * c.day_to_sec*365.25
-    #
-    # binary_set['proj_sep'] = proj_sep
-    # binary_set['pm'] = pm
-    # binary_set['theta'] = (proj_sep * c.Rsun_to_cm)/(dist * c.pc_to_cm) * (180.0 * 3600.0 / np.pi)
-    # binary_set['delta_mu'] = pm_at_dist(pm, dist=dist)
 
     binary_set['proj_sep'] = proj_sep
     binary_set['delta_v_trans'] = delta_v_trans
