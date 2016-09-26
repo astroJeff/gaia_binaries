@@ -1,8 +1,9 @@
 import numpy as np
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, multivariate_normal
 from sklearn.neighbors import KernelDensity
 from numpy.random import normal
 import const as c
+import parallax
 
 
 mu_kde = None
@@ -533,3 +534,78 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
     P_pos_mu = P_pos * P_mu
 
     return P_pos_mu, P_pos, P_mu
+
+
+
+def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density):
+    """ This function calculates the probability of a
+    pair of stars being formed due to random alignments.
+
+    Parameters
+    ----------
+    id1, id2 : float
+        Indices of catalog for stars in the pair
+    t : ndarray
+        Catalog
+    n_samples : int
+        Number of samples for Delta mu Monte Carlo integral
+    pos_density : float
+        local position density
+    pm_density : float
+        local proper motion density
+
+    Returns
+    -------
+    P(data) : float
+        Probability that the pair was produced randomly
+    """
+
+    # Catalog check
+    if t is None:
+        print "Must provide a catalog"
+        return
+
+
+    # P(pos)
+    P_pos = get_random_alignment_P_pos(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2], density=pos_density, catalog=t)
+
+
+    # Create astrometry vectors
+    star1_mean = np.array([t['mu_ra'][id1], t['mu_dec'][id1], t['plx'][id1]])
+    star2_mean = np.array([t['mu_ra'][id2], t['mu_dec'][id2], t['plx'][id2]])
+
+    # Create covariance matrices
+    star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \
+                   [t['mu_ra_mu_dec_cov'][id1], t['mu_dec_err'][id1]**2, t['mu_dec_plx_cov'][id1]], \
+                   [t['mu_ra_plx_cov'][id1], t['mu_dec_plx_cov'][id1], t['plx_err'][id1]**2]])
+    star2_cov = np.array([[t['mu_ra_err'][id2]**2, t['mu_ra_mu_dec_cov'][id2], t['mu_ra_plx_cov'][id2]], \
+                   [t['mu_ra_mu_dec_cov'][id2], t['mu_dec_err'][id2]**2, t['mu_dec_plx_cov'][id2]], \
+                   [t['mu_ra_plx_cov'][id2], t['mu_dec_plx_cov'][id2], t['plx_err'][id2]**2]])
+
+    # Create multivariate_normal objects
+    star1_astrometry = multivariate_normal(mean=star1_mean, cov=star1_cov)
+    star2_astrometry = multivariate_normal(mean=star2_mean, cov=star2_cov)
+
+
+    # Draw random samples
+    star1_samples = star1_astrometry.rvs(size=n_samples)
+    star2_samples = star2_astrometry.rvs(size=n_samples)
+
+
+    # P(mu)
+    P_mu = 1.0/float(n_samples) * np.sum(get_random_alignment_P_mu(star1_samples[:,0], star1_samples[:,1], star2_samples[:,0], star2_samples[:,1],
+                                                            density=pm_density, catalog=t))
+
+
+    # P(plx)
+    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star1_samples[:,2][star1_samples[:,2]>0.0]))
+    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star2_samples[:,2][star2_samples[:,2]>0.0]))
+
+
+
+    # So long as probabilities are independent:
+    # P(pos,mu) = P(pos) * P(mu)
+    random_likelihood = P_pos * P_mu * P_plx_1 * P_plx_2
+
+
+    return random_likelihood

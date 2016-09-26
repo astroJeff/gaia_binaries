@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from numpy.random import uniform
 from scipy.optimize import newton
 from scipy import stats
-from scipy.stats import gaussian_kde, truncnorm
+from scipy.stats import gaussian_kde, truncnorm, multivariate_normal
 from sklearn.neighbors import KernelDensity
 import corner
 
 # Project modules
 import const as c
 import P_random
+import parallax
 
 binary_set = None
 binary_kde = None
@@ -407,6 +408,82 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
     # Convert back from log10-space to linear-space
     # the log(10) terms convert from log10 to ln
     prob_binary = prob_binary / (proj_sep*np.log(10.)) / (delta_v_trans*np.log(10.))
+
+    return prob_binary
+
+
+def get_P_binary_convolve(id1, id2, t, n_samples):
+
+    # Angular separation
+    theta = P_random.get_theta_proj_degree(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2])
+
+
+    # Create astrometry vectors
+    star1_mean = np.array([t['mu_ra'][id1], t['mu_dec'][id1], t['plx'][id1]])
+    star2_mean = np.array([t['mu_ra'][id2], t['mu_dec'][id2], t['plx'][id2]])
+
+    # Create covariance matrices
+    star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \
+                   [t['mu_ra_mu_dec_cov'][id1], t['mu_dec_err'][id1]**2, t['mu_dec_plx_cov'][id1]], \
+                   [t['mu_ra_plx_cov'][id1], t['mu_dec_plx_cov'][id1], t['plx_err'][id1]**2]])
+    star2_cov = np.array([[t['mu_ra_err'][id2]**2, t['mu_ra_mu_dec_cov'][id2], t['mu_ra_plx_cov'][id2]], \
+                   [t['mu_ra_mu_dec_cov'][id2], t['mu_dec_err'][id2]**2, t['mu_dec_plx_cov'][id2]], \
+                   [t['mu_ra_plx_cov'][id2], t['mu_dec_plx_cov'][id2], t['plx_err'][id2]**2]])
+
+    # Create multivariate_normal objects
+    star1_astrometry = multivariate_normal(mean=star1_mean, cov=star1_cov)
+    star2_astrometry = multivariate_normal(mean=star2_mean, cov=star2_cov)
+
+
+    # Draw random samples
+    star1_samples = star1_astrometry.rvs(size=n_samples)
+    star2_samples = star2_astrometry.rvs(size=n_samples)
+
+
+    delta_mu_sample = np.sqrt((star1_samples[:,0]-star2_samples[:,0])**2 + (star1_samples[:,1]-star2_samples[:,1])**2)
+
+
+    # convert from mas to asec
+    dist_sample = 1.0e3 / star1_samples[:,2]
+
+    # Convert from proper motion difference (mas/yr) to transverse velocity difference (km/s)
+    # delta_v_trans = (delta_mu_sample/1.0e3/3600.0*np.pi/180.0) * dist_sample * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
+    delta_v_trans = delta_mu_sample * dist_sample * c.km_s_to_mas_yr
+    delta_v_trans[delta_v_trans<0.0] = 1.0e10
+    # Find the physical separation (Rsun) from the angular separation (degree)
+    # proj_sep = (theta*np.pi/180.0) * dist_sample * (c.pc_to_cm / c.Rsun_to_cm)
+    proj_sep = theta * dist_sample * c.Rsun_to_deg
+    proj_sep[proj_sep<0.0] = 1.0e10  # Remove negative separations from negative parallaxes
+
+
+    # Jacobians for transforming from angular to physical units
+    # Units: [(km/s) / (mas/yr)]
+    # jacob_dV_dmu = dist_sample * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
+    jacob_dV_dmu = dist_sample * c.km_s_to_mas_yr
+    # Units: [(Rsun) / (deg.)]
+    # jacob_ds_dtheta = dist_sample * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
+    jacob_ds_dtheta = dist_sample * c.Rsun_to_deg
+
+
+
+    # Find binary probabilities
+    prob_bin_partial = get_P_binary(proj_sep, delta_v_trans)
+    if np.all(prob_bin_partial == 0.0): return 0.0
+
+    # Now, let's add probabilities for second star's parallax to match
+    pos = np.copy(star2_samples)               # Copy over the astrometry from the second star
+    pos[:,2] = star1_samples[:,2]              # Use the parallaxes from the first star
+    prob_plx_2 = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
+#    prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
+
+    # plt.hist(prob_plx_2, histtype='step', color='k', bins=50)
+    # plt.show()
+
+    # Parallax prior
+    prob_plx_prior = parallax.get_plx_prior(star1_samples[:,2])
+
+    # Monte Carlo integral
+    prob_binary = 1.0/float(n_samples) * np.sum(prob_bin_partial * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
 
     return prob_binary
 
