@@ -4,14 +4,17 @@ import pickle
 import sys
 sys.path.append('../src')
 import P_posterior
+import P_posterior_covar
 
 
 # Read in sample from TGAS table
 dtype = [('ID','<i8'),('tyc','S11'),('hip','<i8'),('ra','<f8'),('dec','<f8'),('mu_ra','<f8'),('mu_dec','<f8'), \
-     ('mu_ra_err','<f8'),('mu_dec_err','<f8'),('plx','<f8'),('plx_err','<f8'),('d_Q','<f8'),('noise','<f8')]
+     ('mu_ra_err','<f8'),('mu_dec_err','<f8'),('plx','<f8'),('plx_err','<f8'), \
+     ('mu_ra_mu_dec_cov','<f8'),('mu_ra_plx_cov','<f8'),('mu_dec_plx_cov','<f8'),('d_Q','<f8'),('noise','<f8')]
 
 tgas_full = np.array([], dtype=dtype)
 
+#for i in np.arange(16):
 for i in np.arange(16):
     if i < 10:
         filename = ('../data/TGAS/TgasSource_000-000-00' + str(i) + '.csv')
@@ -36,6 +39,9 @@ for i in np.arange(16):
     tgas['mu_dec_err'] = tgas_tmp['pmdec_error']  # mas/yr
     tgas['plx'] = tgas_tmp['parallax']            # mas
     tgas['plx_err'] = tgas_tmp['parallax_error']  # mas
+    tgas['mu_ra_mu_dec_cov'] = tgas_tmp['pmra_pmdec_corr']*tgas_tmp['pmra_error']*tgas_tmp['pmdec_error']
+    tgas['mu_ra_plx_cov'] = tgas_tmp['parallax_pmra_corr']*tgas_tmp['parallax_error']*tgas_tmp['pmra_error']
+    tgas['mu_dec_plx_cov'] = tgas_tmp['parallax_pmdec_corr']*tgas_tmp['parallax_error']*tgas_tmp['pmdec_error']
     tgas['d_Q'] = tgas_tmp['astrometric_delta_q']
     tgas['noise'] = tgas_tmp['astrometric_excess_noise_sig']
 
@@ -44,17 +50,17 @@ for i in np.arange(16):
 
 
 
-if len(sys.argv) > 3:
+if len(sys.argv) > 2:
     sys_start = int(sys.argv[1])
     subsample = int(sys.argv[2])
 else:
     sys_start = 0
-    subsample = 1000   
+    subsample = 1000
 
 
-prob_out = P_posterior.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample, size_integrate_full=100000, size_integrate_plx=100000)
-
+# prob_out = P_posterior.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
+#                                             size_integrate_full=100000, size_integrate_plx=100000)
+prob_out = P_posterior_covar.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
+                                            size_integrate_binary=100000, size_integrate_random=100000)
 
 pickle.dump(prob_out, open(sys.argv[3], 'wb'))
-
-#pickle.dump(prob_out, open('../data/TGAS/prob_out.p', 'wb'))
