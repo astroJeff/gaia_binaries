@@ -4,6 +4,7 @@ from sklearn.neighbors import KernelDensity
 from numpy.random import normal
 import const as c
 import parallax
+import matplotlib.pyplot as plt
 
 
 mu_kde = None
@@ -598,8 +599,11 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density):
 
 
     # P(plx)
-    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star1_samples[:,2][star1_samples[:,2]>0.0]))
-    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star2_samples[:,2][star2_samples[:,2]>0.0]))
+    plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
+    # P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star1_samples[:,2][star1_samples[:,2]>0.0]))
+    # P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star2_samples[:,2][star2_samples[:,2]>0.0]))
+    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0)))
+    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0)))
 
 
 

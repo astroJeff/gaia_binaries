@@ -470,6 +470,7 @@ def get_P_binary_convolve(id1, id2, t, n_samples):
     prob_bin_partial = get_P_binary(proj_sep, delta_v_trans)
     if np.all(prob_bin_partial == 0.0): return 0.0
 
+
     # Now, let's add probabilities for second star's parallax to match
     pos = np.copy(star2_samples)               # Copy over the astrometry from the second star
     pos[:,2] = star1_samples[:,2]              # Use the parallaxes from the first star
@@ -480,7 +481,8 @@ def get_P_binary_convolve(id1, id2, t, n_samples):
     # plt.show()
 
     # Parallax prior
-    prob_plx_prior = parallax.get_plx_prior(star1_samples[:,2])
+    plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
+    prob_plx_prior = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0))
 
     # Monte Carlo integral
     prob_binary = 1.0/float(n_samples) * np.sum(prob_bin_partial * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
