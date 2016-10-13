@@ -51,6 +51,7 @@ for i in np.arange(16):
 
 
 
+
 ######### READ IN MATCHED PAIRS ###########
 
 folder = '../data/TGAS/'
@@ -81,11 +82,11 @@ TGAS_good = TGAS[TGAS['P_posterior'] > 0.01]
 
 ######### CREATE NEW CATALOG ##############
 
-dtype = [('source_id_1','f8'), ('ra_1','f8'), ('dec_1','f8'), \
-         ('source_id_2','f8'), ('ra_2','f8'), ('dec_2','f8'), \
+dtype = [('source_id_1','<i8'), ('ra_1','f8'), ('dec_1','f8'), \
+         ('source_id_2','<i8'), ('ra_2','f8'), ('dec_2','f8'), \
          ('mu_ra_1','f8'), ('mu_dec_1','f8'), ('mu_ra_err_1','f8'), ('mu_dec_err_1','f8'), \
          ('mu_ra_2','f8'), ('mu_dec_2','f8'), ('mu_ra_err_2','f8'), ('mu_dec_err_2','f8'),
-         ('plx_1','f8'), ('plx_1_err','f8'), ('plx_2','f8'), ('plx_err_2','f8'), \
+         ('plx_1','f8'), ('plx_err_1','f8'), ('plx_2','f8'), ('plx_err_2','f8'), \
          ('P_posterior','f8'), ('theta','f8')]
 
 pairs = np.zeros(len(TGAS_good), dtype=dtype)
@@ -93,10 +94,10 @@ pairs = np.zeros(len(TGAS_good), dtype=dtype)
 
 for i in np.arange(len(TGAS_good)):
 
-    pairs['source_id_1'][i] = TGAS_good['ID_1'][i]
-    pairs['source_id_2'][i] = TGAS_good['ID_2'][i]
+    pairs['source_id_1'][i] = tgas_full['ID'][TGAS_good['i_1'][i]]
     pairs['ra_1'][i] = tgas_full['ra'][TGAS_good['i_1'][i]]
     pairs['dec_1'][i] = tgas_full['dec'][TGAS_good['i_1'][i]]
+    pairs['source_id_2'][i] = tgas_full['ID'][TGAS_good['i_2'][i]]
     pairs['ra_2'][i] = tgas_full['ra'][TGAS_good['i_2'][i]]
     pairs['dec_2'][i] = tgas_full['dec'][TGAS_good['i_2'][i]]
     pairs['mu_ra_1'][i] = tgas_full['mu_ra'][TGAS_good['i_1'][i]]
@@ -112,12 +113,18 @@ for i in np.arange(len(TGAS_good)):
     pairs['plx_2'][i] = tgas_full['plx'][TGAS_good['i_2'][i]]
     pairs['plx_err_2'][i] = tgas_full['plx_err'][TGAS_good['i_2'][i]]
     pairs['P_posterior'][i] = TGAS_good['P_posterior'][i]
-    pairs['theta'][i] = TGAS_good['theta'][i]
+    pairs['theta'][i] = TGAS_good['theta'][i] * 3600.0
 
 
 
 
-header = 'source_ID_1 source_ID_2 ra_1 dec_1 ra_2 dec_2 mu_ra_1 mu_dec_1 mu_ra_err_1 mu_dec_err_1' + \
-         'mu_ra_2 mu_dec_2 mu_ra_err_2 mu_dec_err_2 plx_1 plx_err_1 plx_2 plx_err_2' + \
-         'P_posterior theta'
-np.savetxt('../data/TGAS/gaia_wide_binaries.txt', pairs, delimiter=' ', header=header)
+header = 'source_ID_1 ra_1 dec_1 source_ID_2 ra_2 dec_2 mu_ra_1 mu_dec_1 mu_ra_err_1 mu_dec_err_1' + \
+         ' mu_ra_2 mu_dec_2 mu_ra_err_2 mu_dec_err_2 plx_1 plx_err_1 plx_2 plx_err_2' + \
+         ' P_posterior theta' + \
+         '\nPositions are in degrees' + \
+         '\nProper motions are in mas/yr' + \
+         '\nParallaxes are in mas'
+
+format = '%i %1.9f %1.9f %i %1.9f %1.9f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %.3e %1.2f'  
+
+np.savetxt('../data/TGAS/gaia_wide_binaries.txt', pairs, delimiter=' ', header=header, fmt=format)
