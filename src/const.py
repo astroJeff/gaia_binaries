@@ -15,7 +15,7 @@ deg_in_sky = 41253.               # Square degrees in the sky
 # For parallax
 km_s_to_mas_yr = (pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / yr_to_sec)
 Rsun_to_deg = (np.pi/180.0) * (pc_to_cm / Rsun_to_cm)
-
+plx_L = 1.35                      # Constant for exponential parallax prior
 
 f_bin = 0.5                       # binary fraction
 

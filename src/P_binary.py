@@ -412,7 +412,7 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
     return prob_binary
 
 
-def get_P_binary_convolve(id1, id2, t, n_samples):
+def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
 
     # Angular separation
     theta = P_random.get_theta_proj_degree(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2])
@@ -482,7 +482,7 @@ def get_P_binary_convolve(id1, id2, t, n_samples):
 
     # Parallax prior
     plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
-    prob_plx_prior = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0))
+    prob_plx_prior = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior)
 
     # Monte Carlo integral
     prob_binary = 1.0/float(n_samples) * np.sum(prob_bin_partial * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)

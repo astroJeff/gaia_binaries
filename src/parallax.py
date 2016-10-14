@@ -70,13 +70,15 @@ def set_plx_kde(t, bandwidth=0.3, method='sklearn_kde'):
         return
 
 
-def get_plx_prior(plx, method='sklearn_kde'):
+def get_plx_prior(plx, prior='empirical', method='sklearn_kde'):
     """ Obtain the parallax priors from the KDE
 
     Parameters
     ----------
     plx : float
         Parallax to get the prior for (units: mas)
+    prior : string
+        Type of prior to apply (options: empirical, exponential)
     method : string
         Method for density determination (options: scipy_kde, sklearn_kde, blocks)
 
@@ -86,37 +88,57 @@ def get_plx_prior(plx, method='sklearn_kde'):
         Prior probability for astrometric parallax
     """
 
-    global plx_kde
 
-    # Check that parallax KDE is set already
-    if plx_kde is None and (method is 'scipy_kde' or method is 'sklearn_kde'):
-        print "You must set the parallax KDE first"
-        return
+    if prior is 'empirical':
+        global plx_kde
 
-    if method is 'scipy_kde':
-        return plx_kde.evaluate((plx))
-
-    elif method is 'sklearn_kde':
-        return np.exp(plx_kde.score_samples(plx[:, np.newaxis]))
-
-    elif method is 'blocks':
-        global plx_bins_blocks
-        global plx_hist_blocks
-
-        if plx_bins_blocks is None or plx_hist_blocks is None:
-            print "You must set the Bayesian Blocks first"
+        # Check that parallax KDE is set already
+        if plx_kde is None and (method is 'scipy_kde' or method is 'sklearn_kde'):
+            print "You must set the parallax KDE first"
             return
 
-        x_2d, y_2d = np.meshgrid(plx, plx_bins_blocks)
-        diff_array = np.array(x_2d-y_2d)
-        shape = diff_array.shape
-        flattened = diff_array.flatten()
-        flattened[flattened<0.0] = 1.0e200
-        diff_array = flattened.reshape(shape)
-        idx = np.argmin(diff_array, axis=0)
+        if method is 'scipy_kde':
+            return plx_kde.evaluate((plx))
 
-        return plx_hist_blocks[idx]
+        elif method is 'sklearn_kde':
+            return np.exp(plx_kde.score_samples(plx[:, np.newaxis]))
+
+        elif method is 'blocks':
+            global plx_bins_blocks
+            global plx_hist_blocks
+
+            if plx_bins_blocks is None or plx_hist_blocks is None:
+                print "You must set the Bayesian Blocks first"
+                return
+
+            x_2d, y_2d = np.meshgrid(plx, plx_bins_blocks)
+            diff_array = np.array(x_2d-y_2d)
+            shape = diff_array.shape
+            flattened = diff_array.flatten()
+            flattened[flattened<0.0] = 1.0e200
+            diff_array = flattened.reshape(shape)
+            idx = np.argmin(diff_array, axis=0)
+
+            return plx_hist_blocks[idx]
 
         # For single values below:
         # idx = np.argmin((plx-plx_bins_blocks)[(plx-plx_bins_blocks)>0.0])
         # return plx_hist_blocks[idx]
+
+    elif prior is 'exponential':
+        # Form is from Astraamadja & Bailer-Jones (2016)
+
+        prior_plx = 1.0/(2.0 * c.plx_L**3 * plx**4) * np.exp(-1.0/(plx*c.plx_L))
+
+        if isinstance(plx, np.ndarray):
+            prior_plx[plx<0.0] = 0.0
+        else:
+            if plx < 0: prior_plx = 0.0
+
+        return prior_plx
+
+
+    else:
+        print "You must provide a valid parallax prior"
+        print "Options: 'empirical' or 'exponential'"
+        return

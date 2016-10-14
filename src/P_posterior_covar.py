@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 
-def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000):
+def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000, plx_prior='empirical'):
     """ Function to match binaries within a catalog
 
     Arguments
@@ -54,13 +54,17 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
     pm_density = P_random.get_sigma_mu(t['mu_ra'][0:1], t['mu_dec'][0:1], catalog=t, method='sklearn_kde')
     # print "Done calculating densities."
 
+
     # Generate parallax KDE for parallax prior
-    parallax.set_plx_kde(t, bandwidth=0.01)
+    if plx_prior = 'empirical':
+        parallax.set_plx_kde(t, bandwidth=0.01)
+
 
     # Set normalization constant for C1 prior
     print "Calculating normalization for random alignment prior..."
     if P_random.C1_prior_norm is None: P_random.set_prior_normalization(t)
     print "Done setting prior."
+
 
     # Start time
     start = time.time()
@@ -143,6 +147,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
             # Calculate the posterior probability
             prob_posterior, prob_random, prob_binary = calc_P_posterior(i, j, t,
+                                                                        plx_prior=plx_prior,
                                                                         size_integrate_binary=size_integrate_binary,
                                                                         size_integrate_random=size_integrate_random)
 
@@ -167,7 +172,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
     return prob_out
 
 
-def calc_P_posterior(id1, id2, t, size_integrate_binary=1000, size_integrate_random=1000):
+def calc_P_posterior(id1, id2, t, plx_prior='empirical', size_integrate_binary=1000, size_integrate_random=1000):
 
 
     pos_density = P_random.get_sigma_pos(t['ra'][id1]*np.ones(1), t['dec'][id1]*np.ones(1), catalog=t, method='sklearn_kde')
@@ -179,11 +184,11 @@ def calc_P_posterior(id1, id2, t, size_integrate_binary=1000, size_integrate_ran
 
 
     ####################### Binary Likelihood #########################
-    P_binary_likelihood = P_binary.get_P_binary_convolve(id1, id2, t, size_integrate_binary)
+    P_binary_likelihood = P_binary.get_P_binary_convolve(id1, id2, t, size_integrate_binary, plx_prior=plx_prior)
 
 
     ####################### Random Alignment Likelihood #########################
-    P_random_likelihood = P_random.get_P_random_convolve(id1, id2, t, size_integrate_random, pos_density, pm_density)
+    P_random_likelihood = P_random.get_P_random_convolve(id1, id2, t, size_integrate_random, pos_density, pm_density, plx_prior=plx_prior)
 
 
     ####################### Calculate Priors #########################

@@ -538,7 +538,7 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
 
 
 
-def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density):
+def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_prior='empirical'):
     """ This function calculates the probability of a
     pair of stars being formed due to random alignments.
 
@@ -554,6 +554,8 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density):
         local position density
     pm_density : float
         local proper motion density
+    plx_prior : string
+        parallax prior method. See parallax.py for options
 
     Returns
     -------
@@ -602,8 +604,8 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density):
     plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
     # P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star1_samples[:,2][star1_samples[:,2]>0.0]))
     # P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star2_samples[:,2][star2_samples[:,2]>0.0]))
-    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0)))
-    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0)))
+    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior))
+    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0), prior=plx_prior))
 
 
 
