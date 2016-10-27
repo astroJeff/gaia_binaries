@@ -56,7 +56,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
 
     # Generate parallax KDE for parallax prior
-    if plx_prior = 'empirical':
+    if plx_prior is 'empirical':
         parallax.set_plx_kde(t, bandwidth=0.01)
 
 
