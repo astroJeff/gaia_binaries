@@ -311,7 +311,15 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
         print "sklearn_kde is the preferred method."
         return
 
-    return sigma_mu
+
+    # Set a minimum sigma_mu so it will never equal zero  - 1.0e-6
+    if isinstance(sigma_mu, np.ndarray):
+        sigma_min = np.ones((2, len(sigma_mu)))
+        sigma_min[0] = sigma_mu
+        sigma_min[1] = 1.0e-6
+        return np.max(sigma_min, axis=0)
+    else:
+        return np.max(1.0e-6, sigma_mu)
 
 
 
