@@ -139,8 +139,6 @@ for i in np.arange(length):
 
     # if len(idx1) > 1 or len(idx2) > 1: print i, len(idx1), len(idx2)
 
-    print
-
     pairs['P_posterior'][i] = TGAS_good['P_posterior'][i]
     pairs['theta'][i] = TGAS_good['theta'][i] * 3600.0
 
@@ -162,7 +160,10 @@ for i in np.arange(length):
     pairs['TMASS_angle_dist_1'][i] = TGAS_combined['TMASS_angle_dist'][idx1]
     pairs['TMASS_n_neighbours_1'][i] = TGAS_combined['TMASS_n_neighbours'][idx1]
     pairs['TMASS_n_mates_1'][i] = TGAS_combined['TMASS_n_mates'][idx1]
-    pairs['TMASS_ph_qual_1'][i] = str(TGAS_combined['TMASS_ph_qual'][idx1])
+    if not TGAS_combined['TMASS_ph_qual'][idx1][0]:
+        pairs['TMASS_ph_qual_1'][i] = '000'
+    else:
+        pairs['TMASS_ph_qual_1'][i] = TGAS_combined['TMASS_ph_qual'][idx1][0]
     pairs['TMASS_ra_1'][i] = TGAS_combined['TMASS_ra'][idx1]
     pairs['TMASS_dec_1'][i] = TGAS_combined['TMASS_dec'][idx1]
     pairs['TMASS_j_mag_1'][i] = TGAS_combined['TMASS_j_mag'][idx1]
@@ -196,7 +197,10 @@ for i in np.arange(length):
     pairs['TMASS_angle_dist_2'][i] = TGAS_combined['TMASS_angle_dist'][idx2]
     pairs['TMASS_n_neighbours_2'][i] = TGAS_combined['TMASS_n_neighbours'][idx2]
     pairs['TMASS_n_mates_2'][i] = TGAS_combined['TMASS_n_mates'][idx2]
-    pairs['TMASS_ph_qual_2'][i] = str(TGAS_combined['TMASS_ph_qual'][idx2])
+    if not TGAS_combined['TMASS_ph_qual'][idx2][0]:
+        pairs['TMASS_ph_qual_2'][i] = '000'
+    else:
+        pairs['TMASS_ph_qual_2'][i] = TGAS_combined['TMASS_ph_qual'][idx2][0]
     pairs['TMASS_ra_2'][i] = TGAS_combined['TMASS_ra'][idx2]
     pairs['TMASS_dec_2'][i] = TGAS_combined['TMASS_dec'][idx2]
     pairs['TMASS_j_mag_2'][i] = TGAS_combined['TMASS_j_mag'][idx2]
