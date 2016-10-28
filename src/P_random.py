@@ -295,7 +295,7 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
                 ran_ids = np.arange(len(catalog))
                 np.random.shuffle(ran_ids)
 
-                mu_kde.fit( np.array([catalog['mu_ra'][ran_ids], catalog['mu_dec'][ran_ids]]).T )
+                mu_kde.fit( np.array([catalog['mu_ra'][ran_ids[0:100000]], catalog['mu_dec'][ran_ids[0:100000]]]).T )
             else:
                 mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
 
