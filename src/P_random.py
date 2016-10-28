@@ -148,13 +148,11 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidt
 
             if c.kde_subset:
                 # Select a subset of catalog for the KDE
-                ra_ran = np.copy(catalog['ra'])
-                dec_ran = np.copy(catalog['dec'])
-                np.random.shuffle(ra_ran)
-                np.random.shuffle(dec_ran)
+                ran_ids = np.arange(len(catalog))
+                np.random.shuffle(ran_ids)
 
                 # KDE needs to be in terms of (ra*cos(dec), dec) so units are deg^-2
-                pos_kde = gaussian_kde((ra_ran[0:100000] * np.cos(dec_ran[0:100000]*np.pi/180.0), dec_ran[0:100000]))
+                pos_kde = gaussian_kde((catalog['ra'][ran_ids[0:100000]] * np.cos(catalog['dec'][ran_ids[0:100000]]*np.pi/180.0), catalog['dec'][ran_ids[0:100000]]))
             else:
                 pos_kde = gaussian_kde((catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']))
 
@@ -171,11 +169,10 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidt
 
             if c.kde_subset:
                 # Select a subset of catalog for the KDE
-                ra_ran = np.copy(catalog['ra'])
-                dec_ran = np.copy(catalog['dec'])
-                np.random.shuffle(ra_ran)
-                np.random.shuffle(dec_ran)
-                pos_kde.fit( np.array([ra_ran[0:100000] * np.cos(dec_ran[0:100000]*np.pi/180.0), dec_ran[0:100000]]).T )
+                ran_ids = np.arange(len(catalog))
+                np.random.shuffle(ran_ids)
+
+                pos_kde.fit( np.array([catalog['ra'][ran_ids[0:100000]] * np.cos(catalog['dec'][ran_ids[0:100000]]*np.pi/180.0), catalog['dec'][ran_ids[0:100000]]]).T )
             else:
                 pos_kde.fit( np.array([catalog['ra'] * np.cos(catalog['dec']*np.pi/180.0), catalog['dec']]).T )
 
@@ -261,21 +258,19 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
 
     global mu_kde
 
-    if method is 'skipy_kde':
+    if method is 'scipy_kde':
         # Use a Gaussian KDE
         if mu_kde is None:
 
             if c.kde_subset:
                 # Select a subset of catalog for the KDE
-                mu_ra_ran = np.copy(catalog['mu_ra'])
-                mu_dec_ran = np.copy(catalog['mu_dec'])
-                np.random.shuffle(mu_ra_ran)
-                np.random.shuffle(mu_dec_ran)
+                ran_ids = np.arange(len(catalog))
+                np.random.shuffle(ran_ids)
 
                 if bandwidth is None:
-                    mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]))
+                    mu_kde = gaussian_kde((catalog['mu_ra'][ran_ids[0:100000]], catalog['mu_dec'][ran_ids[0:100000]]))
                 else:
-                    mu_kde = gaussian_kde((mu_ra_ran[0:100000], mu_dec_ran[0:100000]), bw_method=bandwidth)
+                    mu_kde = gaussian_kde((catalog['mu_ra'][ran_ids[0:100000]], catalog['mu_dec'][ran_ids[0:100000]]), bw_method=bandwidth)
             else:
                 # Use the whole catalog
                 if bandwidth is None:
@@ -297,12 +292,10 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
 
             if c.kde_subset:
                 # Select a subset of catalog for the KDE
-                mu_ra_ran = np.copy(catalog['mu_ra'])
-                mu_dec_ran = np.copy(catalog['mu_dec'])
-                np.random.shuffle(mu_ra_ran)
-                np.random.shuffle(mu_dec_ran)
-                # mu_kde.fit( np.array([mu_ra_ran[0:10000], mu_dec_ran[0:10000]]).T )
-                mu_kde.fit( np.array([mu_ra_ran, mu_dec_ran]).T )
+                ran_ids = np.arange(len(catalog))
+                np.random.shuffle(ran_ids)
+
+                mu_kde.fit( np.array([catalog['mu_ra'][ran_ids], catalog['mu_dec'][ran_ids]]).T )
             else:
                 mu_kde.fit( np.array([catalog['mu_ra'], catalog['mu_dec']]).T )
 

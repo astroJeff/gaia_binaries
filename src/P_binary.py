@@ -235,8 +235,9 @@ def get_proj_sep(f, e, sep, Omega, omega, inc):
     proj_sep : float
         Projected separation
     """
-    sep_x = sep*(np.cos(Omega)*np.sin(omega+f) + np.sin(Omega)*np.cos(omega+f)*np.cos(inc))
-    sep_y = sep*(np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
+
+    sep_x = sep*(np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
+    sep_y = sep*(np.sin(Omega)*np.cos(omega+f) + np.cos(Omega)*np.sin(omega+f)*np.cos(inc))
     proj_sep = np.sqrt(sep_x**2 + sep_y**2)
 
     return proj_sep
@@ -268,11 +269,18 @@ def get_delta_v_trans(f, e, a, P, Omega, omega, inc):
         Tangential velocity (km/s)
     """
 
-    r_dot = a * e * np.sin(f) / np.sqrt(1.0 - e*e) * (2.0*np.pi/P)
-    r_f_dot = a / np.sqrt(1.0 - e*e) * (1.0 + e*np.cos(f)) * (2.0*np.pi/P)
-    delta_vel_1 = r_dot * (np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
-    delta_vel_2 = r_f_dot * (np.cos(Omega)*np.sin(omega+f) + np.sin(Omega)*np.cos(omega+f)*np.cos(inc))
-    delta_v_trans = np.sqrt(delta_vel_1**2 + delta_vel_2**2) / 1.0e5
+    # r_dot = a * e * np.sin(f) / np.sqrt(1.0 - e*e) * (2.0*np.pi/P)
+    # r_f_dot = a / np.sqrt(1.0 - e*e) * (1.0 + e*np.cos(f)) * (2.0*np.pi/P)
+    # delta_vel_1 = r_dot * (np.cos(Omega)*np.cos(omega+f) - np.sin(Omega)*np.sin(omega+f)*np.cos(inc))
+    # delta_vel_2 = r_f_dot * (np.cos(Omega)*np.sin(omega+f) + np.sin(Omega)*np.cos(omega+f)*np.cos(inc))
+    # delta_v_trans = np.sqrt(delta_vel_1**2 + delta_vel_2**2) / 1.0e5
+
+    coeff = (2.0*np.pi/P) * a / np.sqrt(1.0 - e*e)
+    v_x = -np.sin(omega+f)*np.cos(Omega) - e*np.sin(omega)*np.cos(Omega) - \
+            np.cos(omega+f)*np.cos(inc)*np.sin(omega) - e*np.cos(omega)*np.cos(inc)*np.sin(Omega)
+    v_y = -np.sin(omega+f)*np.sin(Omega) - e*np.sin(omega)*np.sin(Omega) + \
+            np.cos(omega+f)*np.cos(inc)*np.cos(Omega) + e*np.cos(omega)*np.cos(inc)*np.cos(Omega)
+    delta_v_trans = coeff * np.sqrt(v_x**2 + v_y**2) / 1.0e5
 
     return delta_v_trans
 
