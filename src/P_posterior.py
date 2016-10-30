@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 
 
 
-def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, size_integrate_plx=10000):
+def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, size_integrate_plx=10000,
+                   plx_kde_bandwidth=0.01, mu_kde_bandwidth=1.0, pos_kde_bandwidth=1.0):
     """ Function to match binaries within a catalog
 
     Arguments
@@ -28,6 +29,8 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
         If provided, the number of random draws for integration over delta mu
     size_integrate_plx : int (optional)
         If provided, the number of random draws for integration over parallax
+    plx_kde_bandwidth, mu_kde_bandwidth, pos_kde_bandwidth : float
+        Specify the bandwidth for mu_kde, pos_kde in P_random
 
     Returns
     -------
@@ -47,11 +50,12 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
     # Generate random alignment KDEs using first entry as a test position
     P_random.mu_kde = None
     P_random.pos_kde = None
-    pos_density = P_random.get_sigma_pos(t['ra'][0:1], t['dec'][0:1], catalog=t, method='sklearn_kde')
-    pm_density = P_random.get_sigma_mu(t['mu_ra'][0:1], t['mu_dec'][0:1], catalog=t, method='sklearn_kde')
+    pos_density = P_random.get_sigma_pos(t['ra'][0:1], t['dec'][0:1], catalog=t, bandwidth=pos_kde_bandwidth, method='sklearn_kde')
+    pm_density = P_random.get_sigma_mu(t['mu_ra'][0:1], t['mu_dec'][0:1], catalog=t, bandwidth=mu_kde_bandwidth, method='sklearn_kde')
 
     # Generate parallax KDE for parallax prior
-    parallax.set_plx_kde(t, bandwidth=0.01)
+    parallax.plx_kde = None
+    parallax.set_plx_kde(t, bandwidth=plx_kde_bandwidth)
 
     # Set normalization constant for C1 prior
     print "Calculating normalization for random alignment prior..."
