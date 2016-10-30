@@ -13,6 +13,13 @@ import matplotlib.pyplot as plt
 
 
 
+# Line corresponding to bulk of simulated binaries
+def min_line(x):
+    line_slope = -0.5
+    line_intercept = 2.5
+    return 10.**(line_slope*np.log10(x) + line_intercept)
+
+
 def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, size_integrate_plx=10000,
                    plx_kde_bandwidth=0.01, mu_kde_bandwidth=1.0, pos_kde_bandwidth=1.0):
     """ Function to match binaries within a catalog
@@ -117,12 +124,16 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
         # dist in pc
         min_dist = 1.0e3 / np.amax(np.vstack([np.ones(len(ids_good)) * (t['plx'][i]+3.0*t['plx_err'][i]), t['plx'][ids_good]+3.0*t['plx_err'][ids_good]]), axis=0)
         min_dist[min_dist<0.0] = 1.0e10
+
         # projected separation in pc
         proj_sep_vector = (theta_good*np.pi/180.0) * min_dist * (c.pc_to_cm / c.Rsun_to_cm)
+
         # Transverse velocity vector in km/s
         delta_v_trans_vector = (mu_diff_vector/1.0e3/3600.0*np.pi/180.0) * min_dist * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
+
         # So we don't have negative delta_v_trans_vectors
-        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, 0.1*np.ones(len(ids_good))]), axis=0)
+#        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, 0.1*np.ones(len(ids_good))]), axis=0)
+        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, min_line(proj_sep_vector)]), axis=0)
 
         ids_good_binary = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
 
