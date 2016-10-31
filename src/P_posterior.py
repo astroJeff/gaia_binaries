@@ -288,5 +288,10 @@ def calc_P_posterior(star1, star2, pos_density, pm_density, id1, id2, t, size_in
 
     # print pos_density, pm_density, P_random.C1_prior_norm, C1_prior, C2_prior, prob_binary, prob_random
 
-    prob_posterior = C2_prior * prob_binary / (C1_prior * prob_random + C2_prior * prob_binary)
+    P_normalization = C1_prior * prob_random + C2_prior * prob_binary
+
+    if P_normalization == 0.0: return 0.0, 0.0, 0.0
+
+    prob_posterior = C2_prior * prob_binary / P_normalization
+
     return prob_posterior, prob_random, prob_binary
