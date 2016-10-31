@@ -12,6 +12,12 @@ import time
 import matplotlib.pyplot as plt
 
 
+# Line corresponding to bulk of simulated binaries
+def min_line(x):
+    line_slope = -0.5
+    line_intercept = 2.5
+    return 10.**(line_slope*np.log10(x) + line_intercept)
+
 
 def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000, plx_prior='empirical'):
     """ Function to match binaries within a catalog
@@ -126,7 +132,8 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
         # Transverse velocity vector in km/s
         delta_v_trans_vector = (mu_diff_vector/1.0e3/3600.0*np.pi/180.0) * min_dist * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
         # So we don't have negative delta_v_trans_vectors
-        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, 0.1*np.ones(len(ids_good))]), axis=0)
+#        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, 0.1*np.ones(len(ids_good))]), axis=0)
+        delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, min_line(proj_sep_vector)]), axis=0)
 
         ids_good_binary = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
 
