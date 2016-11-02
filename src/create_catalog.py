@@ -6,6 +6,67 @@ import sys
 
 
 
+def get_moving_group_ids(t):
+
+    idx = np.array([])
+    # Pleiades
+    idx = np.append(idx, moving_group(56.5, 24.1, 8.6, 20.10, -45.39, 7.4, plx_width=2.0, t=t))
+    # Coma Ber
+    idx = np.append(idx, moving_group(186.0, 26.0, 7.5, -11.75, -8.69, 11.53, plx_width=3.0, t=t))
+    # Hyades
+    idx = np.append(idx, moving_group(66.75, 15.87, 5.0, 110.0, -30.0, 21.3, mu_width=30, plx_width=2.0, t=t))
+    # Praesepe
+    idx = np.append(idx, moving_group(130.0, 19.7, 4.5, -35.81, -12.85, 5.49, plx_width=2.0, t=t))
+    # Alpha Per
+    idx = np.append(idx, moving_group(52.5, 49.0, 8.0, 22.73, -26.51, 5.8, mu_width=5.0, plx_width=2.0, t=t))
+    # IC 2391
+    idx = np.append(idx, moving_group(130.0, -53.1, 8.0, -24.69, 22.96, 6.90, plx_width=2.0, t=t))
+    # IC 2602
+    idx = np.append(idx, moving_group(160.2, -64.4, 2.9, -17.02, 11.15, 6.73, mu_width=5.0, plx_width=2.0, t=t))
+    # Blanco I
+    idx = np.append(idx, moving_group(1.1, -30.1, 2.5, 20.11, 2.43, 4.83, mu_width=5.0, plx_width=2.0, t=t))
+    # NGC 2451
+    idx = np.append(idx, moving_group(115.3, -38.5, 2.0, -21.41, 15.61, 5.45, mu_width=5.0, plx_width=2.0, t=t))
+    # NGC 6475
+    idx = np.append(idx, moving_group(268.4, -34.8, 3.5, 2.06, -4.98, 3.70, plx_width=2.0, t=t))
+    # NGC 7092
+    idx = np.append(idx, moving_group(322.9, 48.4, 3.5, -8.02, -20.36, 3.30, mu_width=5.0, plx_width=2.0, t=t))
+    # NGC 2516
+    idx = np.append(idx, moving_group(119.4, -60.7, 3.5, -4.17, 11.91, 2.92, mu_width=7.0, plx_width=2.0, t=t))
+
+    return idx
+
+
+def moving_group(ra, dec, radius, mu_ra, mu_dec, plx, mu_width=10.0, plx_width=4.0, t=None):
+    if t is None: return
+    pos_idx = ids_position(ra, dec, radius, t)
+    mu_idx = ids_proper_motion(pos_idx, mu_ra, mu_dec, mu_width, t)
+    plx_idx = ids_parallax(mu_idx, plx, plx_width, t)
+
+    return plx_idx
+
+
+def ids_position(ra, dec, radius, t):
+    idx = np.where( (t['ra']-ra)**2*np.cos(dec*np.pi/180.)**2 + (t['dec']-dec)**2 - radius**2 < 0.0)
+    if ra < radius/np.cos(dec*np.pi/180.0):
+        idx = np.append(idx, np.where( (t['ra']-ra-360.0)**2*np.cos(dec*np.pi/180.)**2 + (t['dec']-dec)**2 - radius**2 < 0.0))
+    return idx
+
+def ids_proper_motion(idx, mu_ra, mu_dec, width, t):
+    mu_idx = np.intersect1d(idx, np.where(np.abs((t['mu_ra']-mu_ra)**2 + (t['mu_dec']-mu_dec)**2 - width**2 < 0.0) ))
+    return mu_idx
+
+def ids_parallax(idx, plx, plx_width, t):
+    idx_plx = np.intersect1d(idx, np.where(np.abs(t['plx']-plx) < 2.5))
+    return idx_plx
+
+
+
+
+
+
+
+
 if len(sys.argv) < 2:
      print "You must provide command line arguments"
      exit(-1)
@@ -57,6 +118,15 @@ for i in np.arange(16):
 
 
 
+
+
+
+######## GENERATE IDS FOR STARS IN OPEN CLUSTERS ########
+open_cluster_ids = get_moving_group_ids(t=tgas_full)
+
+
+
+
 ######## READ IN TGAS CATALOG WITH CROSS MATCHES ########
 TGAS_combined = np.load('../data/TGAS/TGAS_combined.npy')
 
@@ -90,7 +160,12 @@ print len(TGAS)
 TGAS_good = TGAS[TGAS['P_posterior'] > 0.01]
 
 
-
+# Remove object if in listed moving group
+idx = []
+for i in np.arange(len(TGAS_good)):
+    if TGAS_good['i_1'][i] in open_cluster_ids or TGAS_good['i_2'][i] in open_cluster_ids: continue
+    idx.append(i)
+TGAS_good = TGAS_good[idx]
 
 
 
@@ -134,8 +209,10 @@ pairs = np.zeros(length, dtype=dtype)
 
 for i in np.arange(length):
 
+    # Cross match with combined TGAS catalog
     idx1 = np.where(TGAS_combined['source_id'] == tgas_full['ID'][TGAS_good['i_1'][i]])
     idx2 = np.where(TGAS_combined['source_id'] == tgas_full['ID'][TGAS_good['i_2'][i]])
+
 
     # if len(idx1) > 1 or len(idx2) > 1: print i, len(idx1), len(idx2)
 
