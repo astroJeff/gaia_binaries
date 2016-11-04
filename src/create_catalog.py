@@ -321,4 +321,4 @@ format = '%.3e %1.2f ' + \
          '%i %s %i %1.9f %1.9f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3e %1.3e %1.2f ' + \
          '%i %1.3f %i %i %s %1.9f %1.9f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f'
 
-np.savetxt('../data/TGAS/'+'gaia_wide_binaries_'+model+'.txt', pairs, delimiter=' ', header=header, fmt=format)
+np.savetxt('../data/TGAS/'+'gaia_wide_binaries_'+model+'_cleaned.txt', pairs, delimiter=' ', header=header, fmt=format)
