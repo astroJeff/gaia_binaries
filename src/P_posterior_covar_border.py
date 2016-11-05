@@ -104,7 +104,15 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 #        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
 
 
-        dist_tmp = np.sqrt((t['ra'][i]-t['ra'][i_star2])**2 * np.cos(t['dec'][i])*np.cos(t['dec'][i_star2]) + (t['dec'][i]-t['dec'][i_star2])**2)
+        ra1 = P_random.deg_to_rad(t['ra'][i])
+        dec1 = P_random.deg_to_rad(t['dec'][i])
+        ra2 = P_random.deg_to_rad(t['ra'][i_star2])
+        dec2 = P_random.deg_to_rad(t['dec'][i_star2])
+        dist_tmp = P_random.rad_to_deg(np.sqrt((ra1-ra2)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2))
+        theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
+#        print t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2]
+#        print ra1, dec1, ra2[0], dec2[0], dist_tmp[0], theta[0]
+
 
         ids_good = reduce(np.intersect1d,
                           (i_star2[np.where(theta < 1.0)[0]],
@@ -177,7 +185,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
                                 t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
-                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
+                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['ra'][i], t['dec'][i], t['ra'][j], t['dec'][j], t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
                         t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], prob_random, prob_binary, prob_posterior
 
 
