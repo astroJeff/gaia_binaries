@@ -44,7 +44,7 @@ def get_theta_proj_degree(ra, dec, ra_b, dec_b):
     ra2 = deg_to_rad(ra_b)
     dec2 = deg_to_rad(dec_b)
 
-    dist = np.ones((3, np.max(len(np.atleast_1d(ra)), len(np.atleast_1d(ra_b)) )))
+    dist = np.ones((3, np.max( [len(np.atleast_1d(ra)), len(np.atleast_1d(ra_b))] )))
     dist[0] = np.sqrt((ra1-ra2)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
     dist[1] = np.sqrt((ra1-ra2-2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
     dist[2] = np.sqrt((ra1-ra2+2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
