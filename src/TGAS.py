@@ -20,7 +20,7 @@ for i in np.arange(16):
         filename = ('../data/TGAS/TgasSource_000-000-00' + str(i) + '.csv')
     else:
         filename = ('../data/TGAS/TgasSource_000-000-0' + str(i) + '.csv')
-
+        
     print filename
     tgas_tmp = Table.read(filename, format='csv', guess=True)
 
