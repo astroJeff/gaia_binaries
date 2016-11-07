@@ -277,7 +277,7 @@ def get_delta_v_trans(f, e, a, P, Omega, omega, inc):
 
     coeff = (2.0*np.pi/P) * a / np.sqrt(1.0 - e*e)
     v_x = -np.sin(omega+f)*np.cos(Omega) - e*np.sin(omega)*np.cos(Omega) - \
-            np.cos(omega+f)*np.cos(inc)*np.sin(omega) - e*np.cos(omega)*np.cos(inc)*np.sin(Omega)
+            np.cos(omega+f)*np.cos(inc)*np.sin(Omega) - e*np.cos(omega)*np.cos(inc)*np.sin(Omega)
     v_y = -np.sin(omega+f)*np.sin(Omega) - e*np.sin(omega)*np.sin(Omega) + \
             np.cos(omega+f)*np.cos(inc)*np.cos(Omega) + e*np.cos(omega)*np.cos(inc)*np.cos(Omega)
     delta_v_trans = coeff * np.sqrt(v_x**2 + v_y**2) / 1.0e5
