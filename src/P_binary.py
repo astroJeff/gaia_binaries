@@ -43,7 +43,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e1, a_high=4.44e8, num_sys=1, prob='log_flat'):
+def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1, prob='log_flat'):
     """ Generate a set of orbital separations from a power law
 
     Parameters
