@@ -43,7 +43,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, prob='log_flat'):
+def get_a(a_low=1.0e1, a_high=4.41e8, num_sys=1, prob='log_flat'):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -467,14 +467,19 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
 
     # TESTING
     # Only calculate probabilities for systems with clearly non-zero probabilities
-    idx = np.where( (np.mean(proj_sep) * c.Rsun_to_cm * (delta_v_trans/1.0e5)**2) / (c.GGG * 10.0 * c.Msun_to_g) < 1.0)[0]
+    # idx = np.where( (np.mean(proj_sep) * c.Rsun_to_cm * (delta_v_trans/1.0e5)**2) / (c.GGG * 10.0 * c.Msun_to_g) < 1.0)[0]
+    idx = np.where( (proj_sep * c.Rsun_to_cm * (delta_v_trans*1.0e5)**2) / (c.GGG * 10.0 * c.Msun_to_g) < 1.0)[0]
+    # No good random samples
+    if len(idx) == 0: return 0.0
+
     jacob_dV_dmu = np.zeros(n_samples)
     jacob_ds_dtheta = np.zeros(n_samples)
     prob_bin_partial = np.zeros(n_samples)
     prob_plx_prior = np.zeros(n_samples)
+    prob_plx_2 = np.zeros(n_samples)
 
-    jacob_dV_dmu[idx] = dist_sample * c.km_s_to_mas_yr
-    jacob_ds_dtheta[idx] = dist_sample * c.Rsun_to_deg
+    jacob_dV_dmu[idx] = dist_sample[idx] * c.km_s_to_mas_yr
+    jacob_ds_dtheta[idx] = dist_sample[idx] * c.Rsun_to_deg
     prob_bin_partial[idx] = get_P_binary(proj_sep[idx], delta_v_trans[idx])
     # TESTING
 
@@ -495,9 +500,9 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
 
 
     # Now, let's add probabilities for second star's parallax to match
-    pos = np.copy(star2_samples)               # Copy over the astrometry from the second star
-    pos[:,2] = star1_samples[:,2]              # Use the parallaxes from the first star
-    prob_plx_2 = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
+    pos = np.copy(star2_samples[idx])               # Copy over the astrometry from the second star
+    pos[:,2] = star1_samples[idx,2]              # Use the parallaxes from the first star
+    prob_plx_2[idx] = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
 #    prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
 
     # plt.hist(prob_plx_2, histtype='step', color='k', bins=50)

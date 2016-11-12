@@ -473,7 +473,7 @@ def get_prior_random_alignment(ra, dec, mu_ra, mu_dec, t, sigma_pos=None, sigma_
 
     global C1_prior_norm
 
-    if C1_prior_norm is not None: set_prior_normalization(t)
+    if C1_prior_norm is None: set_prior_normalization(t)
 
     if sigma_pos is None: sigma_pos = get_sigma_pos(ra, dec, catalog=t)
     if sigma_mu is None: sigma_mu = get_sigma_mu(mu_ra, mu_dec, catalog=t)
