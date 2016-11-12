@@ -43,7 +43,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e1, a_high=1.0e7, num_sys=1, prob='log_flat'):
+def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, prob='log_flat'):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -464,18 +464,33 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
     proj_sep[proj_sep<0.0] = 1.0e10  # Remove negative separations from negative parallaxes
 
 
+
+    # TESTING
+    # Only calculate probabilities for systems with clearly non-zero probabilities
+    idx = np.where( (np.mean(proj_sep) * c.Rsun_to_cm * (delta_v_trans/1.0e5)**2) / (c.GGG * 10.0 * c.Msun_to_g) < 1.0)[0]
+    jacob_dV_dmu = np.zeros(n_samples)
+    jacob_ds_dtheta = np.zeros(n_samples)
+    prob_bin_partial = np.zeros(n_samples)
+    prob_plx_prior = np.zeros(n_samples)
+
+    jacob_dV_dmu[idx] = dist_sample * c.km_s_to_mas_yr
+    jacob_ds_dtheta[idx] = dist_sample * c.Rsun_to_deg
+    prob_bin_partial[idx] = get_P_binary(proj_sep[idx], delta_v_trans[idx])
+    # TESTING
+
+
     # Jacobians for transforming from angular to physical units
     # Units: [(km/s) / (mas/yr)]
-    # jacob_dV_dmu = dist_sample * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
-    jacob_dV_dmu = dist_sample * c.km_s_to_mas_yr
+    ## jacob_dV_dmu = dist_sample * (c.pc_to_cm/1.0e5) * (1.0 / ((180.0/np.pi)*3600.0*1.0e3)) * (1.0 / c.yr_to_sec)
+    # jacob_dV_dmu = dist_sample * c.km_s_to_mas_yr
     # Units: [(Rsun) / (deg.)]
-    # jacob_ds_dtheta = dist_sample * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
-    jacob_ds_dtheta = dist_sample * c.Rsun_to_deg
+    ## jacob_ds_dtheta = dist_sample * (np.pi/180.0) * (c.pc_to_cm / c.Rsun_to_cm)
+    # jacob_ds_dtheta = dist_sample * c.Rsun_to_deg
 
 
 
     # Find binary probabilities
-    prob_bin_partial = get_P_binary(proj_sep, delta_v_trans)
+    # prob_bin_partial = get_P_binary(proj_sep, delta_v_trans)
     if np.all(prob_bin_partial == 0.0): return 0.0
 
 
@@ -489,11 +504,13 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
     # plt.show()
 
     # Parallax prior
-    plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
-    prob_plx_prior = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior)
+    plx_min = 0.01 * np.ones(len(idx))  # Minimum parallax is 0.01
+    # plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
+    prob_plx_prior[idx] = parallax.get_plx_prior(np.max((plx_min,star1_samples[idx,2]), axis=0), prior=plx_prior)
+    # prob_plx_prior[idx] = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior)
 
     # Monte Carlo integral
-    prob_binary = 1.0/float(n_samples) * np.sum(prob_bin_partial * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
+    prob_binary = np.mean(prob_bin_partial * prob_plx_2 * prob_plx_prior * jacob_dV_dmu * jacob_ds_dtheta)
 
     return prob_binary
 

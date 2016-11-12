@@ -601,22 +601,25 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_p
 
 
     # P(mu)
-    P_mu = 1.0/float(n_samples) * np.sum(get_random_alignment_P_mu(star1_samples[:,0], star1_samples[:,1], star2_samples[:,0], star2_samples[:,1],
-                                                            density=pm_density, catalog=t))
+    P_mu = get_random_alignment_P_mu(star1_samples[:,0], star1_samples[:,1], star2_samples[:,0], star2_samples[:,1], density=pm_density, catalog=t)
+    # P_mu = 1.0/float(n_samples) * np.sum(get_random_alignment_P_mu(star1_samples[:,0], star1_samples[:,1], star2_samples[:,0], star2_samples[:,1],
+    #                                                         density=pm_density, catalog=t))
 
 
     # P(plx)
     plx_min = 0.01 * np.ones(n_samples)  # Minimum parallax is 0.01
     # P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star1_samples[:,2][star1_samples[:,2]>0.0]))
     # P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(star2_samples[:,2][star2_samples[:,2]>0.0]))
-    P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior))
-    P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0), prior=plx_prior))
+    # P_plx_1 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior))
+    # P_plx_2 = 1.0/float(n_samples) * np.sum(parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0), prior=plx_prior))
+    P_plx_1 = parallax.get_plx_prior(np.max((plx_min,star1_samples[:,2]), axis=0), prior=plx_prior)
+    P_plx_2 = parallax.get_plx_prior(np.max((plx_min,star2_samples[:,2]), axis=0), prior=plx_prior)
 
 
 
     # So long as probabilities are independent:
     # P(pos,mu) = P(pos) * P(mu)
-    random_likelihood = P_pos * P_mu * P_plx_1 * P_plx_2
-
+#    random_likelihood = P_pos * P_mu * P_plx_1 * P_plx_2
+    random_likelihood = np.mean(P_pos * P_mu * P_plx_1 * P_plx_2)
 
     return random_likelihood

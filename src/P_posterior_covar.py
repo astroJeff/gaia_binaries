@@ -127,7 +127,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
         # dist in pc
         min_dist = 1.0e3 / np.amax(np.vstack([np.ones(len(ids_good)) * (t['plx'][i]+3.0*t['plx_err'][i]), t['plx'][ids_good]+3.0*t['plx_err'][ids_good]]), axis=0)
         min_dist[min_dist<0.0] = 1.0e10
-        # projected separation in pc
+        # projected separation in Rsun
         proj_sep_vector = (theta_good*np.pi/180.0) * min_dist * (c.pc_to_cm / c.Rsun_to_cm)
         # Transverse velocity vector in km/s
         delta_v_trans_vector = (mu_diff_vector/1.0e3/3600.0*np.pi/180.0) * min_dist * (c.pc_to_cm/1.0e5) / (c.yr_to_sec)
@@ -136,13 +136,12 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
         # testing
         # Determine maximum velocity difference as a function of proj_sep_vector
-        delta_v_max = np.sqrt(c.GGG * 2.0 * c.Msun_to_g / (proj_sep_vector * c.Rsun_to_cm)) / 1.0e5  # in km/s
+        delta_v_max = np.sqrt(c.GGG * c.Msun_to_g / (proj_sep_vector * c.Rsun_to_cm)) / 1.0e5  # in km/s
         delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, min_line(proj_sep_vector)]), axis=0)
-        ids_good_binary_2 = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
-        ids_good_binary = np.where(delta_v_trans_vector < delta_v_max)[0]
+#        ids_good_binary_2 = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
+        ids_good_binary = np.intersect1d(np.where(delta_v_trans_vector < delta_v_max)[0], np.where(proj_sep_vector < (c.pc_to_cm / c.Rsun_to_cm))[0])
         # TESTING
 
-        print i, len(ids_good_binary), len(ids_good_binary_2)
 
         # If no matches, move on
         if len(ids_good_binary) == 0: continue

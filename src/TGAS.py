@@ -61,6 +61,6 @@ else:
 # prob_out = P_posterior.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
 #                                             size_integrate_full=100000, size_integrate_plx=100000)
 prob_out = P_posterior_covar.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
-                                            size_integrate_binary=100000, size_integrate_random=100000, plx_prior='empirical')
+                                            size_integrate_binary=100000, size_integrate_random=100000, plx_prior='exponential')
 
 pickle.dump(prob_out, open(sys.argv[3], 'wb'))
