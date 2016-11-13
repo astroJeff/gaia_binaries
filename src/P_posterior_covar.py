@@ -94,14 +94,14 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
             break
 
 
-        # Get ids of all stars within 1 degree and parallaxes in agreement within 3-sigma
+        # Get ids of all stars within 5 degree and parallaxes in agreement within 5-sigma
         i_star2 = np.arange(length - i - 1) + i + 1
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
 #        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
         ids_good = reduce(np.intersect1d,
-                          (i_star2[np.where(theta < 10.0)[0]],
+                          (i_star2[np.where(theta < 5.0)[0]],
                            i_star2[np.where(delta_plx < 5.0*delta_plx_err)[0]],
                            i_star2[np.where(theta != 0.0)[0]]))
 
@@ -139,7 +139,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
         delta_v_max = np.sqrt(c.GGG * 10.0 * c.Msun_to_g / (proj_sep_vector * c.Rsun_to_cm)) / 1.0e5  # in km/s
         delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, min_line(proj_sep_vector)]), axis=0)
 #        ids_good_binary_2 = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
-        ids_good_binary = np.intersect1d(np.where(delta_v_trans_vector < delta_v_max)[0], np.where(proj_sep_vector < 10.0*(c.pc_to_cm / c.Rsun_to_cm))[0])
+        ids_good_binary = np.intersect1d(np.where(delta_v_trans_vector < delta_v_max)[0], np.where(proj_sep_vector < (c.pc_to_cm / c.Rsun_to_cm))[0])
         # TESTING
 
         # If no matches, move on
