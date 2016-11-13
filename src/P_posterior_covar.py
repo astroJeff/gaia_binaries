@@ -136,7 +136,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
         # testing
         # Determine maximum velocity difference as a function of proj_sep_vector
-        delta_v_max = np.sqrt(c.GGG * c.Msun_to_g / (proj_sep_vector * c.Rsun_to_cm)) / 1.0e5  # in km/s
+        delta_v_max = np.sqrt(c.GGG * 10.0 * c.Msun_to_g / (proj_sep_vector * c.Rsun_to_cm)) / 1.0e5  # in km/s
         delta_v_trans_vector = np.amax(np.vstack([delta_v_trans_vector, min_line(proj_sep_vector)]), axis=0)
 #        ids_good_binary_2 = np.where(P_binary.get_P_binary(proj_sep_vector, delta_v_trans_vector) > 0.0)[0]
         ids_good_binary = np.intersect1d(np.where(delta_v_trans_vector < delta_v_max)[0], np.where(proj_sep_vector < 10.0*(c.pc_to_cm / c.Rsun_to_cm))[0])

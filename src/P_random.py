@@ -39,17 +39,23 @@ def get_theta_proj_degree(ra, dec, ra_b, dec_b):
         Angular distance (degrees)
     """
 
-    ra1 = deg_to_rad(ra)
-    dec1 = deg_to_rad(dec)
-    ra2 = deg_to_rad(ra_b)
-    dec2 = deg_to_rad(dec_b)
+    ra1 = c.deg_to_rad * ra
+    dec1 = c.deg_to_rad * dec
+    ra2 = c.deg_to_rad * ra_b
+    dec2 = c.deg_to_rad * dec_b
 
-    dist = np.ones((3, np.max( [len(np.atleast_1d(ra)), len(np.atleast_1d(ra_b))] )))
-    dist[0] = np.sqrt((ra1-ra2)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
-    dist[1] = np.sqrt((ra1-ra2-2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
-    dist[2] = np.sqrt((ra1-ra2+2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
+    # If system is within 10 degrees of the 360-0 degree transition
+    if ra1 * np.cos(dec1) < c.deg_to_rad*10.0 or (2.0*np.pi-ra1) * np.cos(dec1) < c.deg_to_rad*10.0:
+        dist = np.ones((3, np.max( [len(np.atleast_1d(ra)), len(np.atleast_1d(ra_b))] )))
+        dist[0] = np.sqrt((ra1-ra2)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
+        dist[1] = np.sqrt((ra1-ra2-2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
+        dist[2] = np.sqrt((ra1-ra2+2.0*np.pi)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
+        dist = np.min(dist, axis=0)
+    else:
+        dist = np.sqrt((ra1-ra2)**2 * np.cos(dec1)*np.cos(dec2) + (dec1-dec2)**2)
 
-    return rad_to_deg(np.min(dist, axis=0))
+
+    return c.rad_to_deg * dist
 
 
 def get_delta_mu(mu_ra, mu_dec, mu_ra_b, mu_dec_b):
