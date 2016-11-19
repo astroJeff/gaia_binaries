@@ -20,7 +20,7 @@ for i in np.arange(16):
         filename = ('../data/TGAS/TgasSource_000-000-00' + str(i) + '.csv')
     else:
         filename = ('../data/TGAS/TgasSource_000-000-0' + str(i) + '.csv')
-        
+
     print filename
     tgas_tmp = Table.read(filename, format='csv', guess=True)
 
@@ -61,6 +61,7 @@ else:
 # prob_out = P_posterior.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
 #                                             size_integrate_full=100000, size_integrate_plx=100000)
 prob_out = P_posterior_covar.match_binaries(tgas_full, sys_start=sys_start, subsample=subsample,
-                                            size_integrate_binary=100000, size_integrate_random=100000, plx_prior='exponential')
+                                            size_integrate_binary=100000, size_integrate_random=100000,
+                                            plx_prior='exponential', binary_a_prior='log_flat')
 
 pickle.dump(prob_out, open(sys.argv[3], 'wb'))

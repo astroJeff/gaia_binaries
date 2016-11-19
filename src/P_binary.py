@@ -43,7 +43,7 @@ def get_M2(M1, num_sys=1):
     """ Generate secondary masses from flat mass ratio """
     return M1*uniform(size=num_sys)
 
-def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, prob='log_flat'):
+def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, alpha=-1.6, prob='log_flat'):
     """ Generate a set of orbital separations from a power law
 
     Parameters
@@ -55,7 +55,7 @@ def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, prob='log_flat'):
     num_sys : int
         Number of systems to randomly Generate
     prob : string
-        Probability distribution (options: 'log_flat', 'raghavan')
+        Probability distribution (options: 'log_flat', 'raghavan', 'power_law')
 
     Returns
     -------
@@ -79,9 +79,21 @@ def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, prob='log_flat'):
         P_orb = 10.0**(truncnorm.rvs(a, b, loc=mu_P_orb, scale=sigma_P_orb, size=num_sys))
         return P_to_a(1.0, 1.0, P_orb)
 
+    elif prob == 'power_law':
+        if alpha == -1:
+            return get_a(a_low=a_low, a_high=a_high, num_sys=num_sys, prob='log_flat')
+
+        # Scale so 50% of binaries have a > 100 AU
+        a_low, a_high = 100.0 * c.AU_to_cm / c.Rsun_to_cm, 4.41e7
+        C_a = 0.5 / (a_high**(alpha + 1.0) - a_low**(alpha + 1.0))
+
+        a_low = ((4.41e7)**(alpha + 1.0) - 1.0 / C_a) ** (1.0 / (alpha + 1.0))
+        tmp_y = uniform(size=num_sys)
+        return (tmp_y/C_a + a_low**(alpha + 1.0))**(1.0/(alpha + 1.0))
+
     else:
         print "You must provide a valid probability distribution"
-        print "Options are 'log_flat', 'raghavan'"
+        print "Options are 'log_flat', 'raghavan', or 'power_law'"
         return
 
 

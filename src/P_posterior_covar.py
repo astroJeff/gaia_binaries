@@ -19,7 +19,8 @@ def min_line(x):
     return 10.**(line_slope*np.log10(x) + line_intercept)
 
 
-def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000, plx_prior='empirical'):
+def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000,
+                   plx_prior='empirical', binary_a_prior='log_flat'):
     """ Function to match binaries within a catalog
 
     Arguments
@@ -46,7 +47,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
     # Generate simulated binaries
     print "Generating binaries..."
     # NOTE: Computation time scales roughly with num_sys here:
-    P_binary.generate_binary_set(num_sys=10000)
+    P_binary.generate_binary_set(num_sys=10000, a_prob=binary_a_prior)
     print "Done generating binaries"
 
 
