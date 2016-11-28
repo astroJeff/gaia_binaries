@@ -12,9 +12,25 @@ import const as c
 
 
 method = 'emcee'
+threads = 20
+
+
+# Top level KDEs
+dist_log_flat_100_kde = None
+dist_log_flat_100_500_kde = None
+dist_power_law_100_kde = None
+dist_power_law_100_500_kde = None
+
 
 
 def main():
+
+    global dist_log_flat_100_kde 
+    global dist_log_flat_100_500_kde 
+    global dist_power_law_100_kde
+    global dist_power_law_100_500_kde
+
+
     # Load catalogs
     print "Loading catalogs..."
     data_dir = '../data/TGAS/'
@@ -34,18 +50,18 @@ def main():
     theta_power_law_region_1, theta_power_law_region_2 = get_theta_regions(dist_power_law_good, TGAS_power_law_good)
     print "Finished getting theta regions"
 
-
-
+    
     if method == 'emcee':
 
         # Run emcee
         print "Running emcee..."
-        args = dist_power_law_100_kde, dist_power_law_100_500_kde, theta_power_law_region_1, theta_power_law_region_2
+        dist_KDE_prior = 'log_flat'
+        args = dist_KDE_prior, theta_power_law_region_1, theta_power_law_region_2
 
-        sampler = run_emcee(ln_posterior, args)
+        sampler = run_emcee(ln_posterior, args, nwalkers=20, threads=threads)
         print "Finished running emcee"
 
-        pickle.dump( sampler, open( "model_s_dist.p", "wb" ))
+        pickle.dump( sampler, open( "model_s_dist_log_flat.p", "wb" ))
 
 
     else:
@@ -55,9 +71,10 @@ def main():
         alpha_1 = -1.0
         alpha_2 = -1.6
         s_crit = 2.0e3
+        dist_KDE_prior = 'log_flat'
 
         x0 = np.array([alpha_1, alpha_2, s_crit])
-        args = dist_power_law_100_kde, dist_power_law_100_500_kde, theta_power_law_region_1, theta_power_law_region_2
+        args = dist_KDE_prior, theta_power_law_region_1, theta_power_law_region_2
 
         bounds = ([-3.0, -1.0e-5], [-3.0, -1.0e-5], [1.0, 1.0e5])
         print minimize(get_neg_log_likelihood, x0, args=args, method='L-BFGS-B', bounds=bounds)
@@ -201,7 +218,7 @@ def get_theta_regions(dist, TGAS_good):
     return theta_region_1, theta_region_2
 
 
-def calc_integrand(dist, theta, dist_kde, alpha_1, alpha_2, s_crit):
+def calc_integrand(dist, theta, dist_KDE_prior, region, alpha_1, alpha_2, s_crit):
     """
     This function is to calculate the integrand for the integral over distance
 
@@ -225,6 +242,28 @@ def calc_integrand(dist, theta, dist_kde, alpha_1, alpha_2, s_crit):
 
     """
 
+    # Load dist KDEs
+    global dist_log_flat_100_kde
+    global dist_log_flat_100_500_kde
+    global dist_power_law_100_kde
+    global dist_power_law_100_500_kde
+
+    if dist_KDE_prior != 'log_flat' and dist_KDE_prior != 'power_law': return 
+    if region != 1 and region != 2: return
+
+    if dist_KDE_prior == 'log_flat' :
+        if region == 1:
+            dist_kde = dist_log_flat_100_kde
+        else:
+            dist_kde = dist_log_flat_100_500_kde
+    else:
+        if region == 1:
+            dist_kde = dist_power_law_100_kde
+        else:
+            dist_kde = dist_power_law_100_500_kde
+
+
+
     # Get the separation in Rsun
     s = (theta / 3600.0 * np.pi/180.0) * (dist * c.pc_to_cm / c.AU_to_cm)
 
@@ -244,7 +283,7 @@ def calc_integrand(dist, theta, dist_kde, alpha_1, alpha_2, s_crit):
 
 
 
-def calc_integral(theta, dist_min, dist_max, dist_kde, alpha_1, alpha_2, s_crit):
+def calc_integral(theta, dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit):
     """
     Calculate the integral over distance of all binaries that
     could match the observed angular separation, theta.
@@ -270,14 +309,14 @@ def calc_integral(theta, dist_min, dist_max, dist_kde, alpha_1, alpha_2, s_crit)
         Value of integration
     """
 
-    args = theta, dist_kde, alpha_1, alpha_2, s_crit
+    args = theta, dist_KDE_prior, region, alpha_1, alpha_2, s_crit
 
     val = quad(calc_integrand, dist_min, dist_max, args=args, epsrel=1.0e-4)
 
     return val[0]
 
 
-def calc_theta_norm(theta_min, theta_max, dist_min, dist_max, dist_kde, alpha_1, alpha_2, s_crit):
+def calc_theta_norm(theta_min, theta_max, dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit):
     """ Calculate the normalization constant, Z, for the integral
 
     Parameters
@@ -300,7 +339,7 @@ def calc_theta_norm(theta_min, theta_max, dist_min, dist_max, dist_kde, alpha_1,
         Normalization constant for the integral
     """
 
-    args = dist_min, dist_max, dist_kde, alpha_1, alpha_2, s_crit
+    args = dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit
 
     norm = quad(calc_integral, theta_min, theta_max, args=args)
 
@@ -338,7 +377,7 @@ def get_P_s(s, alpha_1, alpha_2, s_crit):
     return P_s
 
 
-def get_neg_log_likelihood(p, dist_kde_region_1, dist_kde_region_2, \
+def get_neg_log_likelihood(p, dist_KDE_prior, \
                            theta_region_1, theta_region_2):
     """ Calculate the likelihood function for a set of parameters and data
 
@@ -361,37 +400,40 @@ def get_neg_log_likelihood(p, dist_kde_region_1, dist_kde_region_2, \
 
     alpha_1, alpha_2, s_crit = p
 
-    # Region 1
+
+    # Region 1 
+    region = 1
     theta_min_region_1, theta_max_region_1 = 10.0, 600.0
     dist_min_region_1, dist_max_region_1 = 0.0, 100.0
     Z_const_1 = calc_theta_norm(theta_min_region_1, theta_max_region_1, \
                                 dist_min_region_1, dist_max_region_1, \
-                                dist_kde_region_1, alpha_1, alpha_2, s_crit)
+                                dist_KDE_prior, region, alpha_1, alpha_2, s_crit)
 
     num_region_1 = len(theta_region_1)
     likelihood_1 = np.zeros(num_region_1)
 
     for i in np.arange(num_region_1):
         likelihood_1[i] = calc_integral(theta_region_1[i], dist_min_region_1, \
-                                        dist_max_region_1, dist_kde_region_1, \
+                                        dist_max_region_1, dist_KDE_prior, region, \
                                         alpha_1, alpha_2, s_crit)
 
 
 
 
     # Region 2
+    region = 2
     theta_min_region_2, theta_max_region_2 = 10.0, 100.0
     dist_min_region_2, dist_max_region_2 = 100.0, 500.0
     Z_const_2 = calc_theta_norm(theta_min_region_2, theta_max_region_2, \
                                 dist_min_region_2, dist_max_region_2, \
-                                dist_kde_region_2, alpha_1, alpha_2, s_crit)
+                                dist_KDE_prior, region, alpha_1, alpha_2, s_crit)
 
     num_region_2 = len(theta_region_2)
     likelihood_2 = np.zeros(num_region_2)
 
     for i in np.arange(num_region_2):
         likelihood_2[i] = calc_integral(theta_region_2[i], dist_min_region_2, \
-                                        dist_max_region_2, dist_kde_region_2, \
+                                        dist_max_region_2, dist_KDE_prior, region, \
                                         alpha_1, alpha_2, s_crit)
 
 
@@ -404,7 +446,7 @@ def get_neg_log_likelihood(p, dist_kde_region_1, dist_kde_region_2, \
     return neg_ll
 
 
-def ln_posterior(p, dist_kde_region_1, dist_kde_region_2, theta_region_1, theta_region_2):
+def ln_posterior(p, dist_KDE_prior, theta_region_1, theta_region_2):
     """ Calculate the posterior probability for a set of parameters and data
 
     Parameters
@@ -435,13 +477,13 @@ def ln_posterior(p, dist_kde_region_1, dist_kde_region_2, theta_region_1, theta_
         return -np.inf
 
     # Call the neg_log_likelihood function and multiply by -1 to get the log likelihood
-    ll = -1.0 * get_neg_log_likelihood(p, dist_kde_region_1, dist_kde_region_2, theta_region_1, theta_region_2)
+    ll = -1.0 * get_neg_log_likelihood(p, dist_KDE_prior, theta_region_1, theta_region_2)
 
     # Since we have no priors, we return the log likelihood here
     return ll
 
 
-def run_emcee(ln_posterior, args, nburn=100, nsteps=100, nwalkers=16, threads=1):
+def run_emcee(ln_posterior, args, nburn=100, nsteps=100, nwalkers=16, threads=1, mpi=False):
 
     # Assign initial values
     p0 = np.zeros((nwalkers,3))
@@ -450,12 +492,18 @@ def run_emcee(ln_posterior, args, nburn=100, nsteps=100, nwalkers=16, threads=1)
     p0[:,2] = 10**np.random.normal(3.0, 0.005, size=nwalkers) # pivot point
 
     # Set up sampler
-    if threads == 1:
+    if mpi == True:
+        pool = MPIPool()
+        if not pool.is_master():
+            pool.wait()
+            sys.exit(0)
+        sampler = emcee.EnsembleSampler(nwalkers=nwalkers, dim=3, lnpostfn=ln_posterior, args=args, pool=pool)
+    elif threads == 1:
         sampler = emcee.EnsembleSampler(nwalkers=nwalkers, dim=3, lnpostfn=ln_posterior, args=args)
-    elif threads > 1 and threads < 9 and isinstance( threads, ( int, long ) ):
+    elif threads > 1 and isinstance( threads, ( int, long ) ):
         sampler = emcee.EnsembleSampler(nwalkers=nwalkers, dim=3, lnpostfn=ln_posterior, args=args, threads=threads)
     else:
-        print "You must provide a reasonable integer number of threads, between 1 and 8"
+        print "You must provide a reasonable integer number of threads, more than 1"
         return
 
     # Burn-in
