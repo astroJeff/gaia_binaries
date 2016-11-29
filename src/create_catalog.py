@@ -14,7 +14,7 @@ def get_moving_group_ids(t):
     # Coma Ber
     idx = np.append(idx, moving_group(186.0, 26.0, 7.5, -11.75, -8.69, 11.53, plx_width=3.0, t=t))
     # Hyades
-    idx = np.append(idx, moving_group(66.75, 15.87, 5.0, 110.0, -30.0, 21.3, mu_width=30, plx_width=2.0, t=t))
+    idx = np.append(idx, moving_group(66.75, 15.87, 18.54, 110.0, -30.0, 21.3, mu_width=30, plx_width=5.0, t=t))
     # Praesepe
     idx = np.append(idx, moving_group(130.0, 19.7, 4.5, -35.81, -12.85, 5.49, plx_width=2.0, t=t))
     # Alpha Per
