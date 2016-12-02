@@ -81,7 +81,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_full=10000, si
     prob_out = np.array([], dtype=dtype)
 
 
-    for i in np.arange(length):
+    for i in np.arange(length) - 1:
 
         #if i%1000 == 0: print i, time.time()-start
 
