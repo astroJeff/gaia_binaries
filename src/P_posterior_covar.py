@@ -20,7 +20,7 @@ def min_line(x):
 
 
 def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, size_integrate_random=10000,
-                   plx_prior='empirical', binary_a_prior='log_flat'):
+                   plx_prior='empirical', binary_a_prior='log_flat', shift=False):
     """ Function to match binaries within a catalog
 
     Arguments
@@ -35,6 +35,8 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
         If provided, the number of random draws for integration over P_binary
     size_integrate_random : int (optional)
         If provided, the number of random draws for integration over P_random
+    shift : bool
+        If True, add a shift to dec, mu_ra, mu_dec of secondary to calibrate for random alignments
 
     Returns
     -------
@@ -73,6 +75,17 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
     print "Done setting prior."
 
 
+    # Add a shift to the secondary for false pair calibrating
+    if shift:
+        d_dec = 2.0
+        d_mu_ra = 3.0
+        d_mu_dec = 3.0
+    else:
+        d_dec = 0.0
+        d_mu_ra = 0.0
+        d_mu_dec = 0.0
+
+
     # Start time
     start = time.time()
 
@@ -97,7 +110,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
         # Get ids of all stars within 5 degree and parallaxes in agreement within 5-sigma
         i_star2 = np.arange(length - i - 1) + i + 1
-        theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2])
+        theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2]+d_dec)
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
 #        ids_good = np.intersect1d(i_star2[np.where(theta < 1.0)[0]], i_star2[np.where(delta_plx < 3.0*delta_plx_err)[0]])
@@ -110,12 +123,12 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
         if len(ids_good) == 0: continue
 
         # Select random delta mu's for Monte Carlo integration over observational uncertainties
-        theta_good = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][ids_good], t['dec'][ids_good])
+        theta_good = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][ids_good], t['dec'][ids_good]+d_dec)
         delta_mu_ra_err = np.sqrt(t['mu_ra_err'][i]**2 + t['mu_ra_err'][ids_good]**2)
         delta_mu_dec_err = np.sqrt(t['mu_dec_err'][i]**2 + t['mu_dec_err'][ids_good]**2)
         delta_mu_err = np.sqrt(delta_mu_ra_err**2 + delta_mu_dec_err**2)
-        delta_mu_ra = t['mu_ra'][i] - t['mu_ra'][ids_good]
-        delta_mu_dec = t['mu_dec'][i] - t['mu_dec'][ids_good]
+        delta_mu_ra = t['mu_ra'][i] - t['mu_ra'][ids_good]-d_mu_ra
+        delta_mu_dec = t['mu_dec'][i] - t['mu_dec'][ids_good]-d_mu_dec
         delta_mu = np.sqrt(delta_mu_ra**2 + delta_mu_dec**2)
         mu_diff_3sigma = delta_mu - 3.0*delta_mu_err
 
@@ -162,7 +175,8 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
             prob_posterior, prob_random, prob_binary = calc_P_posterior(i, j, t,
                                                                         plx_prior=plx_prior,
                                                                         size_integrate_binary=size_integrate_binary,
-                                                                        size_integrate_random=size_integrate_random)
+                                                                        size_integrate_random=size_integrate_random,
+                                                                        shift=shift)
 
 
 
@@ -170,14 +184,15 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
             # if prob_posterior > 0.5:
             if prob_posterior > 0.0:
                 prob_temp = np.zeros(1, dtype=dtype)
-                theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][j], t['dec'][j])
+                theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][j], t['dec'][j]+d_dec)
                 prob_temp[0] = i, j, t['ID'][i], t['ID'][j], prob_random, prob_binary, prob_posterior, \
-                                theta, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], t['plx'][i], \
-                                t['plx'][j]
+                                theta, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j]+d_mu_ra, t['mu_dec'][j]+d_mu_dec, \
+                                t['plx'][i], t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
-                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j], t['mu_dec'][j], \
-                        t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], prob_random, prob_binary, prob_posterior
+                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j]+d_mu_ra, \
+                        t['mu_dec'][j]+d_mu_dec, t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], \
+                        prob_random, prob_binary, prob_posterior
 
 
     print "Elapsed time:", time.time() - start, "seconds"
@@ -185,7 +200,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
     return prob_out
 
 
-def calc_P_posterior(id1, id2, t, plx_prior='empirical', size_integrate_binary=1000, size_integrate_random=1000):
+def calc_P_posterior(id1, id2, t, plx_prior='empirical', size_integrate_binary=1000, size_integrate_random=1000, shift=False):
 
 
     pos_density = P_random.get_sigma_pos(t['ra'][id1]*np.ones(1), t['dec'][id1]*np.ones(1), catalog=t, method='sklearn_kde')
@@ -197,11 +212,13 @@ def calc_P_posterior(id1, id2, t, plx_prior='empirical', size_integrate_binary=1
 
 
     ####################### Binary Likelihood #########################
-    P_binary_likelihood = P_binary.get_P_binary_convolve(id1, id2, t, size_integrate_binary, plx_prior=plx_prior)
+    P_binary_likelihood = P_binary.get_P_binary_convolve(id1, id2, t, size_integrate_binary, plx_prior=plx_prior, \
+                                                         shift=shift)
 
 
     ####################### Random Alignment Likelihood #########################
-    P_random_likelihood = P_random.get_P_random_convolve(id1, id2, t, size_integrate_random, pos_density, pm_density, plx_prior=plx_prior)
+    P_random_likelihood = P_random.get_P_random_convolve(id1, id2, t, size_integrate_random, pos_density, pm_density, \
+                                                         plx_prior=plx_prior, shift=shift)
 
 
     ####################### Calculate Priors #########################

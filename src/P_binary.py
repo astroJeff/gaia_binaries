@@ -432,15 +432,27 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
     return prob_binary
 
 
-def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical'):
+def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=False):
+
+
+    # Add a shift to the secondary for false pair calibrating
+    if shift:
+        d_dec = 2.0
+        d_mu_ra = 3.0
+        d_mu_dec = 3.0
+    else:
+        d_dec = 0.0
+        d_mu_ra = 0.0
+        d_mu_dec = 0.0
+
 
     # Angular separation
-    theta = P_random.get_theta_proj_degree(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2])
+    theta = P_random.get_theta_proj_degree(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2]+d_dec)
 
 
     # Create astrometry vectors
     star1_mean = np.array([t['mu_ra'][id1], t['mu_dec'][id1], t['plx'][id1]])
-    star2_mean = np.array([t['mu_ra'][id2], t['mu_dec'][id2], t['plx'][id2]])
+    star2_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec, t['plx'][id2]])
 
     # Create covariance matrices
     star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \

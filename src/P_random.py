@@ -549,7 +549,7 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
 
 
 
-def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_prior='empirical'):
+def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_prior='empirical', shift=False):
     """ This function calculates the probability of a
     pair of stars being formed due to random alignments.
 
@@ -567,6 +567,8 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_p
         local proper motion density
     plx_prior : string
         parallax prior method. See parallax.py for options
+    shift : bool
+        If true, add a shift to the dec, mu_ra, and mu_dec to get only false pairs
 
     Returns
     -------
@@ -579,14 +581,24 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_p
         print "Must provide a catalog"
         return
 
+    # Add a shift to the secondary for false pair calibrating
+    if shift:
+        d_dec = 2.0
+        d_mu_ra = 3.0
+        d_mu_dec = 3.0
+    else:
+        d_dec = 0.0
+        d_mu_ra = 0.0
+        d_mu_dec = 0.0
+
 
     # P(pos)
-    P_pos = get_random_alignment_P_pos(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2], density=pos_density, catalog=t)
+    P_pos = get_random_alignment_P_pos(t['ra'][id1], t['dec'][id1], t['ra'][id2], t['dec'][id2]+d_dec, density=pos_density, catalog=t)
 
 
     # Create astrometry vectors
     star1_mean = np.array([t['mu_ra'][id1], t['mu_dec'][id1], t['plx'][id1]])
-    star2_mean = np.array([t['mu_ra'][id2], t['mu_dec'][id2], t['plx'][id2]])
+    star2_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec, t['plx'][id2]])
 
     # Create covariance matrices
     star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \

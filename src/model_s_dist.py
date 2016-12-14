@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import quad
+from scipy.integrate import quad, dblquad
 from scipy.stats import gaussian_kde
 from scipy.optimize import minimize
+from sklearn.neighbors import KernelDensity
 import emcee
 import pickle
 
@@ -12,7 +13,7 @@ import const as c
 
 
 method = 'emcee'
-threads = 20
+threads = 1
 
 
 # Top level KDEs
@@ -21,12 +22,17 @@ dist_log_flat_100_500_kde = None
 dist_power_law_100_kde = None
 dist_power_law_100_500_kde = None
 
+d_min_region_1 = lambda x: 0.0
+d_max_region_1 = lambda x: 100.0
+d_min_region_2 = lambda x: 100.0
+d_max_region_2 = lambda x: 500.0
+
 
 
 def main():
 
-    global dist_log_flat_100_kde 
-    global dist_log_flat_100_500_kde 
+    global dist_log_flat_100_kde
+    global dist_log_flat_100_500_kde
     global dist_power_law_100_kde
     global dist_power_law_100_500_kde
 
@@ -50,7 +56,7 @@ def main():
     theta_power_law_region_1, theta_power_law_region_2 = get_theta_regions(dist_power_law_good, TGAS_power_law_good)
     print "Finished getting theta regions"
 
-    
+
     if method == 'emcee':
 
         # Run emcee
@@ -188,11 +194,18 @@ def generate_dist_KDEs(dist, s):
                   np.where(s < 5.0e4)[0],
                   np.where(s > 5.0e3)[0]
                  ])
+    kwargs = {'kernel':'epanechnikov'}
+    dist_100_kde = KernelDensity(bandwidth=10.0, **kwargs)
+    dist_100_kde.fit( dist[idx][dist[idx]<100.0][:, np.newaxis] )
 
-    dist_100_kde = gaussian_kde(dist[idx][dist[idx]<100.0], bw_method=0.3)
+    # dist_100_kde = gaussian_kde(dist[idx][dist[idx]<100.0], bw_method=0.3)
 
     idx_100_500 = np.intersect1d(np.where(dist[idx]>100.0)[0], np.where(dist[idx]<500.0)[0])
-    dist_100_500_kde = gaussian_kde(dist[idx][idx_100_500], bw_method=0.1)
+    # dist_100_500_kde = gaussian_kde(dist[idx][idx_100_500], bw_method=0.1)
+
+    dist_100_500_kde = KernelDensity(bandwidth=10.0, **kwargs)
+    dist_100_500_kde.fit( dist[idx][idx_100_500][:, np.newaxis] )
+
 
     return dist_100_kde, dist_100_500_kde
 
@@ -248,7 +261,7 @@ def calc_integrand(dist, theta, dist_KDE_prior, region, alpha_1, alpha_2, s_crit
     global dist_power_law_100_kde
     global dist_power_law_100_500_kde
 
-    if dist_KDE_prior != 'log_flat' and dist_KDE_prior != 'power_law': return 
+    if dist_KDE_prior != 'log_flat' and dist_KDE_prior != 'power_law': return
     if region != 1 and region != 2: return
 
     if dist_KDE_prior == 'log_flat' :
@@ -274,12 +287,15 @@ def calc_integrand(dist, theta, dist_KDE_prior, region, alpha_1, alpha_2, s_crit
 #     P_s[np.where(s > 3.0e5)] = 0.0
 
     # Get the distance probability
-    P_dist = dist_kde.evaluate((dist))
+    # P_dist = dist_kde.evaluate((dist))
+    P_dist = np.exp(dist_kde.score_samples(dist))
+    # P_dist = np.exp(dist_kde.score_samples(dist[:, np.newaxis]))
 
     # Calculate integrand
     integrand = P_s * dist * P_dist# * norm
 
     return integrand
+
 
 
 
@@ -314,6 +330,23 @@ def calc_integral(theta, dist_min, dist_max, dist_KDE_prior, region, alpha_1, al
     val = quad(calc_integrand, dist_min, dist_max, args=args, epsrel=1.0e-4)
 
     return val[0]
+
+
+def calc_theta_norm_2(theta_min, theta_max, dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit):
+
+    # args = dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit
+    args = dist_KDE_prior, region, alpha_1, alpha_2, s_crit
+
+    if region == 1:
+        norm = dblquad(calc_integrand, theta_min, theta_max, d_min_region_1, d_max_region_1, args=args)
+    else:
+        norm = dblquad(calc_integrand, theta_min, theta_max, d_min_region_2, d_max_region_2, args=args)
+
+    # norm = quad(calc_integral, theta_min, theta_max, args=args)
+
+    return norm[0]
+
+
 
 
 def calc_theta_norm(theta_min, theta_max, dist_min, dist_max, dist_KDE_prior, region, alpha_1, alpha_2, s_crit):
@@ -401,11 +434,11 @@ def get_neg_log_likelihood(p, dist_KDE_prior, \
     alpha_1, alpha_2, s_crit = p
 
 
-    # Region 1 
+    # Region 1
     region = 1
     theta_min_region_1, theta_max_region_1 = 10.0, 600.0
     dist_min_region_1, dist_max_region_1 = 0.0, 100.0
-    Z_const_1 = calc_theta_norm(theta_min_region_1, theta_max_region_1, \
+    Z_const_1 = calc_theta_norm_2(theta_min_region_1, theta_max_region_1, \
                                 dist_min_region_1, dist_max_region_1, \
                                 dist_KDE_prior, region, alpha_1, alpha_2, s_crit)
 
@@ -424,7 +457,7 @@ def get_neg_log_likelihood(p, dist_KDE_prior, \
     region = 2
     theta_min_region_2, theta_max_region_2 = 10.0, 100.0
     dist_min_region_2, dist_max_region_2 = 100.0, 500.0
-    Z_const_2 = calc_theta_norm(theta_min_region_2, theta_max_region_2, \
+    Z_const_2 = calc_theta_norm_2(theta_min_region_2, theta_max_region_2, \
                                 dist_min_region_2, dist_max_region_2, \
                                 dist_KDE_prior, region, alpha_1, alpha_2, s_crit)
 
@@ -483,7 +516,7 @@ def ln_posterior(p, dist_KDE_prior, theta_region_1, theta_region_2):
     return ll
 
 
-def run_emcee(ln_posterior, args, nburn=100, nsteps=100, nwalkers=16, threads=1, mpi=False):
+def run_emcee(ln_posterior, args, nburn=10, nsteps=10, nwalkers=16, threads=1, mpi=False):
 
     # Assign initial values
     p0 = np.zeros((nwalkers,3))
