@@ -108,8 +108,13 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
             break
 
 
-        # Get ids of all stars within 5 degree and parallaxes in agreement within 5-sigma
-        i_star2 = np.arange(length - i - 1) + i + 1
+        # Get ids of all stars within 5 degrees and parallaxes in agreement within 5-sigma
+        if shift:
+            i_star2 = np.arange(length)  # Don't have to worry about double matches, match to everything
+            i_star2 = i_star2[i_star2 != i]  # So it doesn't match to itself
+        else:
+            i_star2 = np.arange(length - i - 1) + i + 1
+
         theta = P_random.get_theta_proj_degree(t['ra'][i], t['dec'][i], t['ra'][i_star2], t['dec'][i_star2]+d_dec)
         delta_plx = np.abs(t['plx'][i]-t['plx'][i_star2])
         delta_plx_err = np.sqrt(t['plx_err'][i]**2 + t['plx_err'][i_star2]**2)
