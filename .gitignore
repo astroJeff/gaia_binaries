@@ -26,3 +26,4 @@ documents/Gaia_binaries.out
 src/*.out
 src/*.sbatch
 src/*.pyc
+src/*.log
