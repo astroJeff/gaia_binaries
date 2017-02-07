@@ -3,7 +3,7 @@ from astropy.table import Table
 import pickle
 import os
 import sys
-
+import const as c
 
 
 def get_moving_group_ids(t):
@@ -120,6 +120,24 @@ for i in np.arange(16):
 
 
 
+######## READ IN TYCHO-HIPPARCOS MATCHING IDS ########
+dtype = [('TYC','S11'), ('HIP','i8')]
+tyc_hip = np.genfromtxt('../data/TGAS/tyc_hip.dat', dtype=dtype)
+
+
+######## ADD TYC IDS FOR STARS WITH HIP IDS ##########
+for i in np.arange(len(tgas_full)):
+    if tgas_full['hip'][i] != 0:
+        hip_id_diff = np.min(np.abs(tyc_hip['HIP'] - tgas_full['hip'][i]))
+        if hip_id_diff == 0:
+            idx = np.argmin(np.abs(tyc_hip['HIP'] - tgas_full['hip'][i]))
+            tgas_full['tyc'][i] = tyc_hip['TYC'][idx]
+        else:
+            print "HIP id not found:", tgas_full['hip'][i], tyc_hip['TYC'][idx]
+
+
+
+
 
 ######## GENERATE IDS FOR STARS IN OPEN CLUSTERS ########
 open_cluster_ids = get_moving_group_ids(t=tgas_full)
@@ -172,6 +190,7 @@ TGAS_good = TGAS_good[idx]
 ######### CREATE NEW CATALOG ##############
 
 dtype = [('P_posterior','f8'), ('theta','f8'),
+         ('distance','<f8'), ('proj_sep','<f8'),
          ('source_id_1','<i8'), ('TYC_id_1','S11'), ('hip_id_1','<i8'),
          ('ra_1','f8'), ('dec_1','f8'),
          ('mu_ra_1','f8'), ('mu_dec_1','f8'), ('mu_ra_err_1','f8'), ('mu_dec_err_1','f8'),
@@ -218,6 +237,15 @@ for i in np.arange(length):
 
     pairs['P_posterior'][i] = TGAS_good['P_posterior'][i]
     pairs['theta'][i] = TGAS_good['theta'][i] * 3600.0
+
+
+    # Weighted distance and projected separation
+    vals = [tgas_full['plx'][TGAS_good['i_1'][i]],tgas_full['plx'][TGAS_good['i_2'][i]]]
+    weights = [1.0/tgas_full['plx_err'][TGAS_good['i_1'][i]],1.0/tgas_full['plx_err'][TGAS_good['i_2'][i]]]
+    pairs['distance'][i] = 1.0e3/np.average(vals, weights=weights)
+    pairs['proj_sep'][i] = (pairs['theta'][i]*np.pi/180.0/3600.0) * pairs['distance'][i] * (c.pc_to_cm/c.AU_to_cm)
+
+
 
     pairs['source_id_1'][i] = tgas_full['ID'][TGAS_good['i_1'][i]]
     pairs['TYC_id_1'][i] = tgas_full['tyc'][TGAS_good['i_1'][i]]
@@ -296,7 +324,7 @@ for i in np.arange(length):
 
 
 
-header = 'P_posterior theta ' + \
+header = 'P_posterior theta distance proj_sep' + \
          'source_ID_1 TYC_ID_1 HIP_ID_1 ra_1 dec_1  mu_ra_1 mu_dec_1 mu_ra_err_1 mu_dec_err_1 plx_1 plx_err_1 ' + \
          'gaia_g_flux_1 gaia_g_flux_err_1 gaia_g_mag_1 ' + \
          '2MASS_ID_1 2MASS_angle_dist_1 2MASS_n_neighbours_1 2MASS_n_mates_1 2MASS_ph_qual_1 ' + \
@@ -313,9 +341,12 @@ header = 'P_posterior theta ' + \
          'Gaia_delta_Q_2 Gaia_noise_2 ' + \
          '\nPositions are in degrees' + \
          '\nProper motions are in mas/yr' + \
-         '\nParallaxes are in mas'
+         '\nParallaxes are in mas' + \
+         '\nDistance is in pc' + \
+         '\nProjected separation is in AU'
 
-format = '%.3e %1.2f ' + \
+
+format = '%.3e %1.2f %1.3f %1.3f ' + \
          '%i %s %i %1.9f %1.9f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3e %1.3e %1.2f ' + \
          '%i %1.3f %i %i %s %1.9f %1.9f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f %1.2f ' + \
          '%i %s %i %1.9f %1.9f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3f %1.3e %1.3e %1.2f ' + \
