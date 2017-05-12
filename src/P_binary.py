@@ -453,6 +453,7 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     # Create astrometry vectors
     star1_mean = np.array([t['mu_ra'][id1], t['mu_dec'][id1], t['plx'][id1]])
     star2_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec, t['plx'][id2]])
+    star2_mu_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec])
 
     # Create covariance matrices
     star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \
@@ -461,10 +462,13 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     star2_cov = np.array([[t['mu_ra_err'][id2]**2, t['mu_ra_mu_dec_cov'][id2], t['mu_ra_plx_cov'][id2]], \
                    [t['mu_ra_mu_dec_cov'][id2], t['mu_dec_err'][id2]**2, t['mu_dec_plx_cov'][id2]], \
                    [t['mu_ra_plx_cov'][id2], t['mu_dec_plx_cov'][id2], t['plx_err'][id2]**2]])
+    star2_mu_cov = np.array([[t['mu_ra_err'][id2]**2, t['mu_ra_mu_dec_cov'][id2]], \
+                   [t['mu_ra_mu_dec_cov'][id2], t['mu_dec_err'][id2]**2]])
 
     # Create multivariate_normal objects
     star1_astrometry = multivariate_normal(mean=star1_mean, cov=star1_cov)
     star2_astrometry = multivariate_normal(mean=star2_mean, cov=star2_cov)
+    star2_mu_astrometry = multivariate_normal(mean=star2_mu_mean, cov=star2_mu_cov)
 
 
     # Draw random samples
@@ -526,7 +530,8 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     # Now, let's add probabilities for second star's parallax to match
     pos = np.copy(star2_samples[idx])               # Copy over the astrometry from the second star
     pos[:,2] = star1_samples[idx,2]              # Use the parallaxes from the first star
-    prob_plx_2[idx] = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
+    # prob_plx_2[idx] = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
+    prob_plx_2[idx] = star2_astrometry.pdf(pos) / star2_mu_astrometry.pdf(star2_samples[idx,0:1])     # Calculate the multivariate PDF
 #    prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
 
     # plt.hist(prob_plx_2, histtype='step', color='k', bins=50)
