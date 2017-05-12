@@ -195,6 +195,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
                                 t['plx'][i], t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
+                # print(i, j, prob_posterior[0])
                 print(i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j]+d_mu_ra, \
                         t['mu_dec'][j]+d_mu_dec, t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], \
                         prob_random, prob_binary, prob_posterior)

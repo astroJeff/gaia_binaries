@@ -500,6 +500,9 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     # No good random samples
     if len(idx) == 0: return 0.0
 
+    # TESTING #
+    if len(idx) < 100: return 0.0
+
     jacob_dV_dmu = np.zeros(n_samples)
     jacob_ds_dtheta = np.zeros(n_samples)
     prob_bin_partial = np.zeros(n_samples)
@@ -526,12 +529,11 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     # prob_bin_partial = get_P_binary(proj_sep, delta_v_trans)
     if np.all(prob_bin_partial == 0.0): return 0.0
 
-
     # Now, let's add probabilities for second star's parallax to match
     pos = np.copy(star2_samples[idx])               # Copy over the astrometry from the second star
     pos[:,2] = star1_samples[idx,2]              # Use the parallaxes from the first star
     # prob_plx_2[idx] = star2_astrometry.pdf(pos)     # Calculate the multivariate PDF
-    prob_plx_2[idx] = star2_astrometry.pdf(pos) / star2_mu_astrometry.pdf(star2_samples[idx,0:1])     # Calculate the multivariate PDF
+    prob_plx_2[idx] = star2_astrometry.pdf(pos) / star2_mu_astrometry.pdf(star2_samples[idx,:2])     # Calculate the multivariate PDF
 #    prob_plx_2 = norm.pdf(plx_sample, loc=t['plx'][id2], scale=t['plx_err'][id2])
 
     # plt.hist(prob_plx_2, histtype='step', color='k', bins=50)
