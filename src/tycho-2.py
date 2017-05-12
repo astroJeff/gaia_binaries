@@ -6,12 +6,12 @@ sys.path.append('../src')
 import P_posterior
 
 
-print "Opening Tycho-2 catalog..."
+print("Opening Tycho-2 catalog...")
 # Read in sample from Tycho-2 table
 filename = ('../data/tycho-2/tyc2.dat')
 readme = ('../data/tycho-2/ReadMe')
 tycho_full = Table.read(filename, format='cds', guess=False, readme=readme)
-print "...finished reading data."
+print("...finished reading data.")
 
 
 # Create the clean tycho-2 catalog
@@ -39,7 +39,3 @@ p_out = P_posterior.match_binaries(t)
 
 # Save resulting array
 pickle.dump(p_out, open('../data/tycho-2/prob_out_full.data', "wb"))
-
-
-
-

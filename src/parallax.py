@@ -53,7 +53,7 @@ def set_plx_kde(t, bandwidth=0.3, method='sklearn_kde'):
         global plx_hist_blocks
 
         # Set up Bayesian Blocks
-        print "Calculating Bayesian Blocks..."
+        print("Calculating Bayesian Blocks...")
         nbins = np.min([len(t), 40000])
         bins = bayesian_blocks(t['plx'][t['plx']>0.0][0:nbins])
         hist, bins = np.histogram(t['plx'][t['plx']>0.0][0:nbins], bins=bins, normed=True)
@@ -62,11 +62,11 @@ def set_plx_kde(t, bandwidth=0.3, method='sklearn_kde'):
         plx_bins_blocks = np.append(-1.0e100, bins)
         hist_pad = np.append(0.0, hist)
         plx_hist_blocks = np.append(hist_pad, 0.0)
-        print "Bayesian Blocks set."
+        print("Bayesian Blocks set.")
 
     else:
-        print "You must include a valid method"
-        print "Options: kde or blocks"
+        print("You must include a valid method")
+        print("Options: kde or blocks")
         return
 
 
@@ -94,7 +94,7 @@ def get_plx_prior(plx, prior='empirical', method='sklearn_kde'):
 
         # Check that parallax KDE is set already
         if plx_kde is None and (method is 'scipy_kde' or method is 'sklearn_kde'):
-            print "You must set the parallax KDE first"
+            print("You must set the parallax KDE first")
             return
 
         if method is 'scipy_kde':
@@ -108,7 +108,7 @@ def get_plx_prior(plx, prior='empirical', method='sklearn_kde'):
             global plx_hist_blocks
 
             if plx_bins_blocks is None or plx_hist_blocks is None:
-                print "You must set the Bayesian Blocks first"
+                print("You must set the Bayesian Blocks first")
                 return
 
             x_2d, y_2d = np.meshgrid(plx, plx_bins_blocks)
@@ -139,6 +139,6 @@ def get_plx_prior(plx, prior='empirical', method='sklearn_kde'):
 
 
     else:
-        print "You must provide a valid parallax prior"
-        print "Options: 'empirical' or 'exponential'"
+        print("You must provide a valid parallax prior")
+        print("Options: 'empirical' or 'exponential'")
         return

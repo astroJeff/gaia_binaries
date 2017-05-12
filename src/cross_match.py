@@ -21,7 +21,7 @@ for i in np.arange(16):
     else:
         filename = ('../data/TGAS/TgasSource_000-000-0' + str(i) + '.csv')
 
-    print filename
+    print(filename)
     tgas_tmp = Table.read(filename, format='csv', guess=True)
 
 
@@ -84,7 +84,7 @@ dtype = [('source_id','<i8'),('tyc','S11'),('hip','<i8'),
         #  ('URAT_r_mag','<f8'), ('URAT_r_mag_error','<f8'),
         #  ('URAT_i_mag','<f8'), ('URAT_i_mag_error','<f8'),
          ('TMASS_id','<i8'), ('TMASS_angle_dist','<f8'),
-         ('TMASS_n_neighbours','i8'), ('TMASS_n_mates','i8'), ('TMASS_ph_qual','S11'), 
+         ('TMASS_n_neighbours','i8'), ('TMASS_n_mates','i8'), ('TMASS_ph_qual','S11'),
          ('TMASS_ra','<f8'), ('TMASS_dec','<f8'),
          ('TMASS_j_mag','<f8'), ('TMASS_j_mag_error','<f8'),
          ('TMASS_h_mag','<f8'), ('TMASS_h_mag_error','<f8'),
@@ -106,7 +106,7 @@ start = time.time()
 
 for i in np.arange(num):
 
-    if i%1000 == 0: print i, time.time()-start
+    if i%1000 == 0: print(i, time.time()-start)
 
 
     # idx1 = np.where(tgas_full[i]['source_id'] == URAT['source_id'])
@@ -154,9 +154,9 @@ for i in np.arange(num):
     if len(idx2[0] > 0):
         tgas_full_combined[i]['TMASS_id'] = TWO_MASS[idx2]['tmass_oid']
         tgas_full_combined[i]['TMASS_angle_dist'] = TWO_MASS[idx2]['angular_distance']
-        tgas_full_combined[i]['TMASS_n_neighbours'] = TWO_MASS[idx2]['best_neighbour_multiplicity'] 
-        tgas_full_combined[i]['TMASS_n_mates'] = TWO_MASS[idx2]['number_of_mates'] 
-        tgas_full_combined[i]['TMASS_ph_qual'] = TWO_MASS[idx2]['ph_qual'][0]  
+        tgas_full_combined[i]['TMASS_n_neighbours'] = TWO_MASS[idx2]['best_neighbour_multiplicity']
+        tgas_full_combined[i]['TMASS_n_mates'] = TWO_MASS[idx2]['number_of_mates']
+        tgas_full_combined[i]['TMASS_ph_qual'] = TWO_MASS[idx2]['ph_qual'][0]
         tgas_full_combined[i]['TMASS_ra'] = TWO_MASS[idx2]['ra']
         tgas_full_combined[i]['TMASS_dec'] = TWO_MASS[idx2]['dec']
         tgas_full_combined[i]['TMASS_j_mag'] = TWO_MASS[idx2]['j_m']
@@ -187,4 +187,4 @@ for i in np.arange(num):
 np.save('../data/TGAS/TGAS_combined', tgas_full_combined)
 
 
-print "Elapsed time:", time.time() - start, "seconds"
+print("Elapsed time:", time.time() - start, "seconds")

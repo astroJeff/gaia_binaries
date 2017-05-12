@@ -106,7 +106,7 @@ def nstars_nearby(ra, dec, radius=1.0, catalog=None):
     """
 
     if catalog is None:
-        print "You must supply an input catalog"
+        print("You must supply an input catalog")
         return
 
     # Note: Function does not work across 360 deg - 0 deg border
@@ -147,7 +147,7 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidt
 
     # Catalog check
     if catalog is None:
-        print "You must provide a catalog"
+        print("You must provide a catalog")
         return
     if method is 'empirical':
         # Estimate number density of stars from number of systems within 5 degrees
@@ -191,8 +191,8 @@ def get_sigma_pos(ra, dec, catalog=None, rad=5.0, method='sklearn_kde', bandwidt
 
 
     else:
-        print "You must provide a valid method"
-        print "Options: 'scipy_kde', 'sklearn_kde', or 'empirical'"
+        print("You must provide a valid method")
+        print("Options: 'scipy_kde', 'sklearn_kde', or 'empirical'")
         return
 
     return sigma_star
@@ -220,7 +220,7 @@ def get_random_alignment_P_pos(ra1, dec1, ra2, dec2, density=None, catalog=None)
 
     # Catalog check
     if catalog is None:
-        print "You must provide a catalog"
+        print("You must provide a catalog")
         return
 
     # Projected distance
@@ -263,7 +263,7 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
 
     # Catalog check
     if catalog is None:
-        print "You must include a catalog."
+        print("You must include a catalog.")
         return
 
     global mu_kde
@@ -316,9 +316,9 @@ def get_sigma_mu(mu_ra, mu_dec, catalog=None, rad=5.0, method='sklearn_kde', ban
         n_stars_near = nstars_nearby_mu(mu_ra, mu_dec, radius=rad, catalog=catalog)-1
         sigma_mu = n_stars_near / (4.0*np.pi * rad**2)
     else:
-        print "You must input an appropriate method."
-        print "Options: 'scipy_kde', 'sklearn_kde', or 'empirical'"
-        print "sklearn_kde is the preferred method."
+        print("You must input an appropriate method.")
+        print("Options: 'scipy_kde', 'sklearn_kde', or 'empirical'")
+        print("sklearn_kde is the preferred method.")
         return
 
 
@@ -354,7 +354,7 @@ def nstars_nearby_mu(mu_ra, mu_dec, radius=1.0, catalog=None):
     """
 
     if catalog is None:
-        print "You must supply an input catalog"
+        print("You must supply an input catalog")
         return
 
     dist = np.sqrt((mu_ra-catalog['mu_ra'])**2 + (mu_dec-catalog['mu_dec'])**2)
@@ -387,7 +387,7 @@ def get_random_alignment_P_mu(mu_ra1, mu_dec1, mu_ra2, mu_dec2, delta_mu_ra_err=
 
     # Catalog check
     if catalog is None:
-        print "You must include a catalog."
+        print("You must include a catalog.")
         return
 
     # Proper motion density
@@ -521,7 +521,7 @@ def get_P_random_alignment(ra1, dec1, ra2, dec2, mu_ra1, mu_dec1, mu_ra2, mu_dec
 
     # Catalog check
     if catalog is None:
-        print "Must provide a catalog"
+        print("Must provide a catalog")
         return
 
     # P(pos)
@@ -578,7 +578,7 @@ def get_P_random_convolve(id1, id2, t, n_samples, pos_density, pm_density, plx_p
 
     # Catalog check
     if t is None:
-        print "Must provide a catalog"
+        print("Must provide a catalog")
         return
 
     # Add a shift to the secondary for false pair calibrating

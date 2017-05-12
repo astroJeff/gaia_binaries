@@ -47,10 +47,10 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
 
     # Generate simulated binaries
-    print "Generating binaries..."
+    print("Generating binaries...")
     # NOTE: Computation time scales roughly with num_sys here:
     P_binary.generate_binary_set(num_sys=10000, a_prob=binary_a_prior)
-    print "Done generating binaries"
+    print("Done generating binaries")
 
 
     # Generate random alignment KDEs using first entry as a test position
@@ -70,9 +70,9 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
 
     # Set normalization constant for C1 prior
-    print "Calculating normalization for random alignment prior..."
+    print("Calculating normalization for random alignment prior...")
     if P_random.C1_prior_norm is None: P_random.set_prior_normalization(t)
-    print "Done setting prior."
+    print("Done setting prior.")
 
 
     # Add a shift to the secondary for false pair calibrating
@@ -91,7 +91,7 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
 
     # Now, let's calculate the probabilities
     length = len(t)
-    print "We are testing", length, "stars..."
+    print("We are testing", length, "stars...")
 
     dtype = [('i_1','i4'),('i_2','i4'),('ID_1','i4'),('ID_2','i4'),('P_random','f8'),('P_binary','f8'),('P_posterior','f8'), \
             ('theta','f8'), ('mu_ra_1','f8'), ('mu_dec_1','f8'), ('mu_ra_2','f8'), ('mu_dec_2','f8'), ('plx_1','f8'), ('plx_2','f8')]
@@ -195,12 +195,12 @@ def match_binaries(t, sys_start=0, subsample=None, size_integrate_binary=10000, 
                                 t['plx'][i], t['plx'][j]
                 prob_out = np.append(prob_out, prob_temp)
 
-                print i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j]+d_mu_ra, \
+                print(i, j, t['ID'][i], t['ID'][j], theta*3600.0, t['mu_ra'][i], t['mu_dec'][i], t['mu_ra'][j]+d_mu_ra, \
                         t['mu_dec'][j]+d_mu_dec, t['plx'][i], t['plx_err'][i], t['plx'][j], t['plx_err'][j], \
-                        prob_random, prob_binary, prob_posterior
+                        prob_random, prob_binary, prob_posterior)
 
 
-    print "Elapsed time:", time.time() - start, "seconds"
+    print("Elapsed time:", time.time() - start, "seconds")
 
     return prob_out
 

@@ -68,7 +68,7 @@ def ids_parallax(idx, plx, plx_width, t):
 
 
 if len(sys.argv) < 2:
-     print "You must provide command line arguments"
+     print("You must provide command line arguments")
      exit(-1)
 
 
@@ -89,7 +89,7 @@ for i in np.arange(16):
     else:
         filename = ('../data/TGAS/TgasSource_000-000-0' + str(i) + '.csv')
 
-    print filename
+    print(filename)
     tgas_tmp = Table.read(filename, format='csv', guess=True)
 
 
@@ -133,7 +133,7 @@ for i in np.arange(len(tgas_full)):
             idx = np.argmin(np.abs(tyc_hip['HIP'] - tgas_full['hip'][i]))
             tgas_full['tyc'][i] = tyc_hip['TYC'][idx]
         else:
-            print "HIP id not found:", tgas_full['hip'][i], tyc_hip['TYC'][idx]
+            print("HIP id not found:", tgas_full['hip'][i], tyc_hip['TYC'][idx])
 
 
 
@@ -169,7 +169,7 @@ for filename in os.listdir(folder):
         TGAS = np.append(TGAS, TGAS_tmp)
 
 
-print len(TGAS)
+print(len(TGAS))
 
 
 

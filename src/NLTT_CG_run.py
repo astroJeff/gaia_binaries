@@ -58,9 +58,9 @@ dtype = [('NLTT_1','i4'),('NLTT_2','i4'),('P_random','f8'),('P_binary','f8'),\
 prob_out_CG = np.array([], dtype=dtype)
 
 for pair in CG_pairs:
-    
-    if len(prob_out_CG)%100 == 0: print len(prob_out_CG)
-    
+
+    if len(prob_out_CG)%100 == 0: print(len(prob_out_CG))
+
 #    print pair['NLTT-A'], pair['NLTT-B'], pair['CCode']
 
     # Check if there is a match for star 1
@@ -87,10 +87,10 @@ for pair in CG_pairs:
         t_full['mu_ra_err'][np.where(pair['NLTT-B'] == t_full['NLTT'])][0], \
         t_full['mu_dec_err'][np.where(pair['NLTT-B'] == t_full['NLTT'])][0]
 
-        
+
     delta_pm_ra_err = np.sqrt(star1[4]**2 + star2[4]**2)
     delta_pm_dec_err = np.sqrt(star1[5]**2 + star2[5]**2)
-                
+
 
     # If uncertainties are zero
     if delta_pm_ra_err == 0.0 or delta_pm_dec_err == 0.0:
@@ -104,15 +104,15 @@ for pair in CG_pairs:
         prob_temp['P_posterior'][0] = -1
         prob_temp['CCode'][0] = pair['CCode']
         prob_out_CG = np.append(prob_out_CG, prob_temp[0])
-  
+
         continue
 
 
 
-        
+
     # Get probability of random alignment
     prob_random, P_pos, P_mu = P_random.get_P_random_alignment(star1[0], star1[1], star2[0], star2[1],
-                                          star1[2], star1[3], star2[2], star2[3], 
+                                          star1[2], star1[3], star2[2], star2[3],
                                           delta_mu_ra_err=delta_pm_ra_err, delta_mu_dec_err=delta_pm_dec_err,
                                           catalog=t)
 
@@ -138,12 +138,9 @@ for pair in CG_pairs:
     prob_temp['P_mu'][0] = P_mu
     prob_temp['P_posterior'][0] = P_posterior.f_bin * prob_binary / (prob_random + P_posterior.f_bin * prob_binary)
     prob_temp['CCode'][0] = pair['CCode']
-        
+
     prob_out_CG = np.append(prob_out_CG, prob_temp[0])
 
 
 
 pickle.dump(prob_out_CG, open("../data/rNLTT/prob_CG_100pc.data", "wb"))
-
-
-

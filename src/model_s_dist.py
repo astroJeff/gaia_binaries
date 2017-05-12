@@ -38,34 +38,34 @@ def main():
 
 
     # Load catalogs
-    print "Loading catalogs..."
+    print("Loading catalogs...")
     data_dir = '../data/TGAS/'
     TGAS_power_law, TGAS_log_flat, TGAS_power_law_good, TGAS_log_flat_good = load_catalogs(data_dir)
-    print "Finished loading catalogs"
+    print("Finished loading catalogs")
 
     # Create distance KDEs
-    print "Generating distance KDEs..."
+    print("Generating distance KDEs...")
     dist_log_flat_good, dist_power_law_good, s_log_flat_good, s_power_law_good = calc_distances(TGAS_log_flat, TGAS_power_law)
     dist_log_flat_100_kde, dist_log_flat_100_500_kde = generate_dist_KDEs(dist_log_flat_good, s_log_flat_good)
     dist_power_law_100_kde, dist_power_law_100_500_kde = generate_dist_KDEs(dist_power_law_good, s_power_law_good)
-    print "Finished generating distance KDEs"
+    print("Finished generating distance KDEs")
 
     # Select subsets of systems within 2 regions
-    print "Getting theta regions..."
+    print("Getting theta regions...")
     theta_log_flat_region_1, theta_log_flat_region_2 = get_theta_regions(dist_log_flat_good, TGAS_log_flat_good)
     theta_power_law_region_1, theta_power_law_region_2 = get_theta_regions(dist_power_law_good, TGAS_power_law_good)
-    print "Finished getting theta regions"
+    print("Finished getting theta regions")
 
 
     if method == 'emcee':
 
         # Run emcee
-        print "Running emcee..."
+        print("Running emcee...")
         dist_KDE_prior = 'log_flat'
         args = dist_KDE_prior, theta_power_law_region_1, theta_power_law_region_2
 
         sampler = run_emcee(ln_posterior, args, nwalkers=20, threads=threads)
-        print "Finished running emcee"
+        print("Finished running emcee")
 
         pickle.dump( sampler, open( "model_s_dist_log_flat.p", "wb" ))
 
@@ -73,7 +73,7 @@ def main():
     else:
 
         # Starting values
-        print "Minimizing..."
+        print("Minimizing...")
         alpha_1 = -1.0
         alpha_2 = -1.6
         s_crit = 2.0e3
@@ -83,8 +83,8 @@ def main():
         args = dist_KDE_prior, theta_power_law_region_1, theta_power_law_region_2
 
         bounds = ([-3.0, -1.0e-5], [-3.0, -1.0e-5], [1.0, 1.0e5])
-        print minimize(get_neg_log_likelihood, x0, args=args, method='L-BFGS-B', bounds=bounds)
-        print "Finished minimizing"
+        print(minimize(get_neg_log_likelihood, x0, args=args, method='L-BFGS-B', bounds=bounds))
+        print("Finished minimizing")
 
 
     return
@@ -95,7 +95,7 @@ def load_catalogs(data_dir):
     """ Function to return catalogs """
 
     if data_dir is None:
-        print "You must provide the directory filepath"
+        print("You must provide the directory filepath")
         return
 
     dtype = [('P_posterior','f8'), ('theta','f8'),
@@ -473,7 +473,7 @@ def get_neg_log_likelihood(p, dist_KDE_prior, \
     neg_ll = -1.0 * (np.sum(np.log(likelihood_1)) + np.sum(np.log(likelihood_2)) + \
                - num_region_1 * np.log(Z_const_1) - num_region_2 * np.log(Z_const_2))
 
-    print p, neg_ll
+    print(p, neg_ll)
 
     # Combine likelihoods
     return neg_ll
@@ -536,7 +536,7 @@ def run_emcee(ln_posterior, args, nburn=10, nsteps=10, nwalkers=16, threads=1, m
     elif threads > 1 and isinstance( threads, ( int, long ) ):
         sampler = emcee.EnsembleSampler(nwalkers=nwalkers, dim=3, lnpostfn=ln_posterior, args=args, threads=threads)
     else:
-        print "You must provide a reasonable integer number of threads, more than 1"
+        print("You must provide a reasonable integer number of threads, more than 1")
         return
 
     # Burn-in

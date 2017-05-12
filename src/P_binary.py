@@ -92,8 +92,8 @@ def get_a(a_low=1.0e1, a_high=4.41e7, num_sys=1, alpha=-1.6, prob='log_flat'):
         return (tmp_y/C_a + a_low**(alpha + 1.0))**(1.0/(alpha + 1.0))
 
     else:
-        print "You must provide a valid probability distribution"
-        print "Options are 'log_flat', 'raghavan', or 'power_law'"
+        print("You must provide a valid probability distribution")
+        print("Options are 'log_flat', 'raghavan', or 'power_law'")
         return
 
 
@@ -119,8 +119,8 @@ def get_e(num_sys=1, prob='thermal'):
     elif prob == 'tokovinin':  # From Tokovinin & Kiyaeva (2016), MNRAS 456
         return (-1.0 + np.sqrt(1.0 + 15.0*uniform(size=num_sys))) / 3.0
     else:
-        print "You must provide a valid probability distribution"
-        print "Options are 'thermal', 'flat', 'circular', or 'tokovinin'"
+        print("You must provide a valid probability distribution")
+        print("Options are 'thermal', 'flat', 'circular', or 'tokovinin'")
         return
 
 # Random orbital orientation Parameters
@@ -381,8 +381,8 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
         # We work in log space for the set of binaries
 
         if kde_method is not 'sklearn' and kde_method is not 'scipy':
-            print "Must use a valid kde algorithm: options are 'sklearn' and 'scipy'"
-            print "NOTE: sklean's KDE is the Lotus to scipy's 3-cylinder Pinto"
+            print("Must use a valid kde algorithm: options are 'sklearn' and 'scipy'")
+            print("NOTE: sklean's KDE is the Lotus to scipy's 3-cylinder Pinto")
             return
 
 
@@ -421,8 +421,8 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
                 prob_binary = binary_kde.evaluate([np.log10(proj_sep), np.log10(delta_v_trans)])
 
     else:
-        print "You must input an appropriate method."
-        print "Options: 'kde' only"
+        print("You must input an appropriate method.")
+        print("Options: 'kde' only")
         return
 
     # Convert back from log10-space to linear-space
