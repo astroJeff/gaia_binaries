@@ -346,6 +346,99 @@ def calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc):
 
 
 
+def calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc):
+    """ From the random orbits, calculate the projected separation, velocity
+
+    Parameters
+    ----------
+    M1 : float
+        Primary mass (Msun)
+    M2 : float
+        Secondary mass (Msun)
+    a : float
+        Orbital separation (Rsun)
+    e : float
+        Eccentricity
+    M : float
+        Mean anomalies (radians)
+    Omega : float
+        Longitude of the ascending node (radians)
+    omega : float
+        Argument of periapse (radians)
+    inc : float
+        Inclination angle (radians)
+
+    Returns
+    -------
+    proj_sep : float
+        Projected separations (ndarray, Rsun)
+    delta_v_trans : float
+        Tangential velocities (ndarray, km/s)
+    """
+
+    # Acceleration constant for MOND
+    a0 = 1.2e-8
+
+    # From Scarpa et al. (2017), MOND acts at separations larger than 7000 AU
+    a_limit = 7000.0 * c.AU_to_cm
+
+    # Calculate f's
+    num_sys = len(M1)
+    f = np.zeros(num_sys)
+    proj_sep = np.zeros(num_sys)
+    delta_v_trans = np.zeros(num_sys)
+
+    # Currently, eccentricity is not accounted for in our MOND implementation.
+    # There are good reasons for this. Namely, it is not a defined quantity in
+    # MOND orbits - non-circular orbits do not close in on themselves and form
+    # rosettes, i.e. they have non-integer periodicity in azimuthal space.
+
+    for i in np.arange(num_sys):
+
+        if a[i] < 7000.0 * c.AU_to_cm/c.Rsun_to_cm:
+            f[i] = get_f(M[i], e[i])
+
+            # Calculate separations - in Rsun
+            sep = a[i] * (1.0 - e[i]**2) / (1.0 + e[i]*np.cos(f[i]))
+            proj_sep[i] = get_proj_sep(f[i], e[i], sep, Omega[i], omega[i], inc[i])
+
+            # Orbital period in days
+            P = a_to_P(M1[i], M2[i], a[i])
+            # Calculate proper motions
+            delta_v_trans[i] = get_delta_v_trans(f[i], e[i], a[i]*c.Rsun_to_cm,
+                                                 P*c.day_to_sec, Omega[i], omega[i], inc[i])
+
+        else:
+
+            # Calculate separations - in Rsun
+            proj_sep[i] = get_proj_sep(f[i], 0.0, a[i], Omega[i], 0.0, inc[i])
+
+            r1 = (a[i]*c.Rsun_to_cm) / (1.0 + np.sqrt(M1[i]/M2[i]))
+            r2 = (a[i]*c.Rsun_to_cm) / (1.0 + np.sqrt(M2[i]/M1[i]))
+            a1 = c.GGG * M2[i]*c.Msun_to_g / (a[i]*c.Rsun_to_cm)**2
+            a2 = c.GGG * M1[i]*c.Msun_to_g / (a[i]*c.Rsun_to_cm)**2
+            v1 = (r1**2 * a1 * a0)**0.25
+            v2 = (r2**2 * a2 * a0)**0.25
+
+            v_diff = v1 + v2
+
+            # Calculate proper motions
+            v_x = -np.sin(omega[i]+f[i])*np.cos(Omega[i]) - \
+                    e[i]*np.sin(omega[i])*np.cos(Omega[i]) - \
+                    np.cos(omega[i]+f[i])*np.cos(inc[i])*np.sin(Omega[i]) - \
+                    e[i]*np.cos(omega[i])*np.cos(inc[i])*np.sin(Omega[i])
+            v_y = -np.sin(omega[i]+f[i])*np.sin(Omega[i]) - \
+                    e[i]*np.sin(omega[i])*np.sin(Omega[i]) + \
+                    np.cos(omega[i]+f[i])*np.cos(inc[i])*np.cos(Omega[i]) + \
+                    e[i]*np.cos(omega[i])*np.cos(inc[i])*np.cos(Omega[i])
+            delta_v_trans[i] = v_diff * np.sqrt(v_x**2 + v_y**2) / 1.0e5
+
+
+
+    return proj_sep, delta_v_trans
+
+
+
 def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_method='sklearn'):
     """ This function calculates the probability of a
     random star having the observed proper motion
@@ -455,6 +548,10 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     star2_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec, t['plx'][id2]])
     star2_mu_mean = np.array([t['mu_ra'][id2]+d_mu_ra, t['mu_dec'][id2]+d_mu_dec])
 
+    if star1_mean.ndim == 2: star1_mean = star1_mean[:,0]
+    if star2_mean.ndim == 2: star2_mean = star2_mean[:,0]
+    if star2_mu_mean.ndim == 2: star2_mu_mean = star2_mu_mean[:,0]
+
     # Create covariance matrices
     star1_cov = np.array([[t['mu_ra_err'][id1]**2, t['mu_ra_mu_dec_cov'][id1], t['mu_ra_plx_cov'][id1]], \
                    [t['mu_ra_mu_dec_cov'][id1], t['mu_dec_err'][id1]**2, t['mu_dec_plx_cov'][id1]], \
@@ -465,11 +562,17 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
     star2_mu_cov = np.array([[t['mu_ra_err'][id2]**2, t['mu_ra_mu_dec_cov'][id2]], \
                    [t['mu_ra_mu_dec_cov'][id2], t['mu_dec_err'][id2]**2]])
 
-    # Create multivariate_normal objects
-    star1_astrometry = multivariate_normal(mean=star1_mean, cov=star1_cov)
-    star2_astrometry = multivariate_normal(mean=star2_mean, cov=star2_cov)
-    star2_mu_astrometry = multivariate_normal(mean=star2_mu_mean, cov=star2_mu_cov)
+    if star1_cov.ndim == 3: star1_cov = star1_cov[:,:,0]
+    if star2_cov.ndim == 3: star2_cov = star2_cov[:,:,0]
+    if star2_mu_cov.ndim == 3: star2_mu_cov = star2_mu_cov[:,:,0]
 
+    # Create multivariate_normal objects
+    try:
+        star1_astrometry = multivariate_normal(mean=star1_mean, cov=star1_cov)
+        star2_astrometry = multivariate_normal(mean=star2_mean, cov=star2_cov)
+        star2_mu_astrometry = multivariate_normal(mean=star2_mu_mean, cov=star2_mu_cov)
+    except:
+        return 0.0
 
     # Draw random samples
     star1_samples = star1_astrometry.rvs(size=n_samples)
@@ -552,7 +655,7 @@ def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=F
 
 
 
-def generate_binary_set(num_sys=100000, ecc_prob='thermal', a_prob='log_flat'):
+def generate_binary_set(num_sys=100000, ecc_prob='thermal', a_prob='log_flat', method='kepler'):
     """ Create set of binaries to be saved to P_binary.binary_set
 
     Parameters
@@ -572,10 +675,18 @@ def generate_binary_set(num_sys=100000, ecc_prob='thermal', a_prob='log_flat'):
 
     global binary_set
 
+    if method != 'kepler' and method != 'MOND':
+        print("You must provide a valid method.")
+        return
+
     # Create random binaries
     M1, M2, a, e, M, Omega, omega, inc = create_binaries(num_sys, ecc_prob=ecc_prob, a_prob=a_prob)
+
     # Get random projected separations, velocities
-    proj_sep, delta_v_trans = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
+    if method=='kepler':
+        proj_sep, delta_v_trans = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
+    else:
+        proj_sep, delta_v_trans = calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc)
 
     binary_set = np.zeros(num_sys, dtype=[('proj_sep', 'f8'),('delta_v_trans','f8')])
 
