@@ -14,6 +14,8 @@ import parallax
 
 binary_set = None
 binary_kde = None
+binary_v_tot = None
+binary_v_tot_kde = None
 
 # Random binary parameters
 def get_M1(M_low=0.5, M_high=10.0, num_sys=1):
@@ -255,6 +257,33 @@ def get_proj_sep(f, e, sep, Omega, omega, inc):
     return proj_sep
 
 
+def get_delta_v_tot(f, e, a, P):
+    """ Return the tangential peculiar velocity
+
+    Parameters
+    ----------
+    f : float
+        True anomaly (radians)
+    e : float
+        Eccentricity
+    a : float
+        Physical separation : a*[1-e*cos(f)] (cm)
+    P : float
+        Orbital period (sec)
+
+    Returns
+    -------
+    delta_v_tot : float
+        Total velocity difference (km/s)
+    """
+
+    coeff = (2.0*np.pi/P) * a / np.sqrt(1.0 - e*e)
+    delta_v_tot = coeff * (1.0 + 2.0*e*np.cos(f) + e*e) / 1.0e5
+
+    return delta_v_tot
+
+
+
 def get_delta_v_trans(f, e, a, P, Omega, omega, inc):
     """ Return the tangential peculiar velocity
 
@@ -341,8 +370,9 @@ def calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc):
     P = a_to_P(M1, M2, a)
     # Calculate proper motions
     delta_v_trans = get_delta_v_trans(f, e, a*c.Rsun_to_cm, P*c.day_to_sec, Omega, omega, inc)
+    delta_v_tot = get_delta_v_tot(f, e, a*c.Rsun_to_cm, P*c.day_to_sec)
 
-    return proj_sep, delta_v_trans
+    return proj_sep, delta_v_trans, delta_v_tot
 
 
 
@@ -387,6 +417,7 @@ def calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc):
     f = np.zeros(num_sys)
     proj_sep = np.zeros(num_sys)
     delta_v_trans = np.zeros(num_sys)
+    delta_v_tot = np.zeros(num_sys)
 
     # Currently, eccentricity is not accounted for in our MOND implementation.
     # There are good reasons for this. Namely, it is not a defined quantity in
@@ -407,6 +438,7 @@ def calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc):
             # Calculate proper motions
             delta_v_trans[i] = get_delta_v_trans(f[i], e[i], a[i]*c.Rsun_to_cm,
                                                  P*c.day_to_sec, Omega[i], omega[i], inc[i])
+            delta_v_tot[i] = get_delta_v_tot(f[i], e[i], a[i]*c.Rsun_to_cm, P*c.day_to_sec)
 
         else:
 
@@ -432,10 +464,10 @@ def calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc):
                     np.cos(omega[i]+f[i])*np.cos(inc[i])*np.cos(Omega[i]) + \
                     e[i]*np.cos(omega[i])*np.cos(inc[i])*np.cos(Omega[i])
             delta_v_trans[i] = v_diff * np.sqrt(v_x**2 + v_y**2) / 1.0e5
+            delta_v_tot[i] = v_diff / 1.0e5
 
 
-
-    return proj_sep, delta_v_trans
+    return proj_sep, delta_v_trans, delta_v_tot
 
 
 
@@ -523,6 +555,59 @@ def get_P_binary(proj_sep, delta_v_trans, num_sys=100000, method='kde', kde_meth
     prob_binary = prob_binary / (proj_sep*np.log(10.)) / (delta_v_trans*np.log(10.))
 
     return prob_binary
+
+
+def get_P_binary_v_tot(proj_sep, delta_v_tot, num_sys=100000):
+    """ This function calculates the probability of a
+    random star having the observed proper motion
+
+    Parameters
+    ----------
+    proj_sep : float
+        Projected separation between two stars
+    delta_v_tot : float
+        Total velocity difference between two stars
+
+    Returns
+    -------
+    P(proj_sep, delta_v_tot) : float
+        Probability that angular separation, pm+RV difference
+        is due to a genuine binary
+    """
+
+    # Catalog check
+    global binary_set
+
+    if binary_set is None:
+        generate_binary_set(num_sys=num_sys)
+
+    # Use a Gaussian KDE
+    global binary_v_tot_kde
+    # We work in log space for the set of binaries
+
+    if binary_v_tot_kde is None:
+        kwargs = {'kernel':'tophat'}
+        binary_v_tot_kde = KernelDensity(bandwidth=0.1, **kwargs)
+        binary_v_tot_kde.fit( np.array([np.log10(binary_set['proj_sep']), np.log10(binary_set['delta_v_tot'])]).T )
+
+    if isinstance(delta_v_tot, np.ndarray) and isinstance(proj_sep, np.ndarray):
+        values = np.array([np.log10(proj_sep), np.log10(delta_v_tot)]).T
+        prob_binary = np.exp(binary_v_tot_kde.score_samples(values))
+
+    elif isinstance(delta_v_tot, np.ndarray):
+        values = np.array([np.log10(proj_sep)*np.ones(len(delta_v_tot)), np.log10(delta_v_tot)]).T
+        prob_binary = np.exp(binary_v_tot_kde.score_samples(values))
+    else:
+        prob_binary = np.exp(binary_v_tot_kde.score_samples([np.log10(proj_sep), np.log10(delta_v_tot)]))
+
+
+    # Convert back from log10-space to linear-space
+    # the log(10) terms convert from log10 to ln
+    prob_binary = prob_binary / (proj_sep*np.log(10.)) / (delta_v_tot*np.log(10.))
+
+    return prob_binary
+
+
 
 
 def get_P_binary_convolve(id1, id2, t, n_samples, plx_prior='empirical', shift=False):
@@ -684,14 +769,15 @@ def generate_binary_set(num_sys=100000, ecc_prob='thermal', a_prob='log_flat', m
 
     # Get random projected separations, velocities
     if method=='kepler':
-        proj_sep, delta_v_trans = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
+        proj_sep, delta_v_trans, delta_v_tot = calc_theta_delta_v_trans(M1, M2, a, e, M, Omega, omega, inc)
     else:
-        proj_sep, delta_v_trans = calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc)
+        proj_sep, delta_v_trans, delta_v_tot = calc_theta_delta_v_trans_MOND(M1, M2, a, e, M, Omega, omega, inc)
 
-    binary_set = np.zeros(num_sys, dtype=[('proj_sep', 'f8'),('delta_v_trans','f8')])
+    binary_set = np.zeros(num_sys, dtype=[('proj_sep', 'f8'),('delta_v_trans','f8'),('delta_v_tot','f8')])
 
     binary_set['proj_sep'] = proj_sep
     binary_set['delta_v_trans'] = delta_v_trans
+    binary_set['delta_v_tot'] = delta_v_tot
 
     return
 
